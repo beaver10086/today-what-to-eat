@@ -1,0 +1,33 @@
+{
+  "name": "what-to-eat-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "5.2.1",
+    "axios": "1.20.0",
+    "pinia": "2.3.0",
+    "normalize.css": "8.0.1",
+    "vant": "4.9.15",
+    "vue": "3.5.13",
+    "vue-router": "4.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.17.0",
+    "@types/node": "22.10.2",
+    "eslint": "10.11.0",
+    "eslint-plugin-vue": "10.11.1",
+    "prettier": "3.4.2",
+    "typescript": "5.7.2",
+    "typescript-eslint": "8.70.1",
+    "vite": "6.4.3",
+    "vue-tsc": "2.2.0"
+  }
+}
