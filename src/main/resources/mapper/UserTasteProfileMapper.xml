@@ -52,4 +52,16 @@
     <select id="count" resultType="long">
         SELECT COUNT(*) FROM `user_taste_profile` WHERE `is_deleted` = 0
     </select>
+    <select id="selectAllByUserId" resultType="com.studyroom.model.UserTasteProfile">
+        SELECT `id`, `user_id`, `tag_id`, `weight`, `source`, `create_time`, `update_time`, `is_deleted`
+        FROM `user_taste_profile` WHERE `user_id` = #{userId}
+    </select>
+    <select id="selectByUserId" resultType="com.studyroom.model.UserTasteProfile">
+        SELECT `id`, `user_id`, `tag_id`, `weight`, `source`, `create_time`, `update_time`, `is_deleted`
+        FROM `user_taste_profile` WHERE `user_id` = #{userId} AND `is_deleted` = 0
+    </select>
+    <update id="setDeleted">
+        UPDATE `user_taste_profile` SET `is_deleted` = #{isDeleted}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id}
+    </update>
 </mapper>

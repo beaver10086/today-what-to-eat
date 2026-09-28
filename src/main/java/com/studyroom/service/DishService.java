@@ -58,6 +58,12 @@ public class DishService {
         shopService.require(request.shopId());
         Dish dish = new Dish();
         apply(dish, request);
+        dish.setRating(BigDecimal.ZERO);
+        dish.setRatingCount(0);
+        dish.setLikeCount(0);
+        dish.setDislikeCount(0);
+        dish.setFavoriteCount(0);
+        dish.setRecommendCount(0);
         dishMapper.insert(dish);
         return view(dish);
     }
@@ -129,12 +135,6 @@ public class DishService {
         dish.setImageUrl(request.imageUrl());
         dish.setIsSignature(request.isSignature() == null ? 0 : request.isSignature());
         dish.setIsAvailable(request.isAvailable() == null ? 1 : request.isAvailable());
-        dish.setRating(BigDecimal.ZERO);
-        dish.setRatingCount(0);
-        dish.setLikeCount(0);
-        dish.setDislikeCount(0);
-        dish.setFavoriteCount(0);
-        dish.setRecommendCount(0);
     }
 
     private DishView view(Dish dish) {

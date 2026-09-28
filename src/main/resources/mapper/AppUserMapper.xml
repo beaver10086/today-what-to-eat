@@ -72,4 +72,13 @@
     <select id="count" resultType="long">
         SELECT COUNT(*) FROM `app_user` WHERE `is_deleted` = 0
     </select>
+    <select id="selectByUsername" resultType="com.studyroom.model.AppUser">
+        SELECT `id`, `username`, `password`, `nickname`, `avatar_url`, `phone`, `role`, `status`,
+               `last_login_time`, `create_time`, `update_time`, `is_deleted`
+        FROM `app_user` WHERE `username` = #{username} AND `is_deleted` = 0 LIMIT 1
+    </select>
+    <update id="touchLastLogin">
+        UPDATE `app_user` SET `last_login_time` = CURRENT_TIMESTAMP, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
 </mapper>

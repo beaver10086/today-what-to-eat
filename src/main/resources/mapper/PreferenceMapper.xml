@@ -77,4 +77,10 @@
     <select id="count" resultType="long">
         SELECT COUNT(*) FROM `preference` WHERE `is_deleted` = 0
     </select>
+    <select id="selectByUserId" resultType="com.studyroom.model.Preference">
+        SELECT `id`, `user_id`, `max_spice_level`, `budget_min`, `budget_max`, `like_tag_ids`,
+               `dislike_tag_ids`, `diet_type`, `profile_summary`, `questionnaire_version`,
+               `create_time`, `update_time`, `is_deleted`
+        FROM `preference` WHERE `user_id` = #{userId} AND `is_deleted` = 0 LIMIT 1
+    </select>
 </mapper>

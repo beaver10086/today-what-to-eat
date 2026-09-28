@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studyroom.common.ApiResponse;
 import com.studyroom.common.AuditAction;
+import com.studyroom.common.AuthUser;
 import com.studyroom.mapper.CanteenMapper;
 import com.studyroom.mapper.DishMapper;
 import com.studyroom.mapper.OperationLogMapper;
@@ -90,7 +91,9 @@ public class AuditActionAspect {
 
     private static Long returnedId(Object result) {
         Object payload = unwrap(result);
-        if (payload == null) return null;
+        if (payload == null) {
+            return null;
+        }
         try {
             Method accessor = payload.getClass().getMethod("id");
             Object id = accessor.invoke(payload);
@@ -101,18 +104,16 @@ public class AuditActionAspect {
     }
 
     private static Object unwrap(Object result) {
-        if (result instanceof ApiResponse<?> response) return response.data();
+        if (result instanceof ApiResponse<?> response) {
+            return response.data();
+        }
         return result;
     }
 
     private static long operatorId() {
         HttpServletRequest request = request();
-        if (request == null) return 0L;
-        try {
-            return Math.max(0L, Long.parseLong(request.getHeader("X-Operator-Id")));
-        } catch (NumberFormatException | NullPointerException exception) {
-            return 0L;
-        }
+        Object principal = request == null ? null : request.getAttribute(AuthUser.REQUEST_ATTRIBUTE);
+        return principal instanceof AuthUser user ? user.id() : 0L;
     }
 
     private static String remoteAddress() {

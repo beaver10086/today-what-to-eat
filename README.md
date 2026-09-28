@@ -1,6 +1,6 @@
 # 今天吃什么
 
-面向校园食堂的口味问卷、菜品筛选与推荐项目。仓库已包含阶段 0 工程基线、阶段 1.2 演示种子数据、阶段 1.3 MyBatis 实体与 Mapper，以及阶段 2 的食堂/档口/菜品/标签基础数据接口。
+面向校园食堂的口味问卷、菜品筛选与推荐项目。仓库包含阶段 0 工程基线、阶段 1 数据层、阶段 2 数据接口与管理页面，以及阶段 3 注册登录、口味问卷和口味画像基础能力。
 
 ## 技术栈
 
@@ -12,19 +12,31 @@
 
 ### 后端
 
-需要 JDK 17+、Maven 3.8+、MySQL 8。先按需执行 `docs/sql/V1.0.0__init.sql`，然后在 `what-to-eat` 目录运行：
+需要 JDK 17+、Maven 3.8+、MySQL 8。首次建库后依次执行 `docs/sql/V1.0.0__init.sql` 和 `docs/sql/V1.0.1__seed.sql`，然后在 `what-to-eat` 目录运行：
 
 ```bash
 mvn spring-boot:run
 ```
 
-默认连接 `localhost:3306/what_to_eat`，用户名默认为 `root`。首次建库执行 `docs/sql/V1.0.0__init.sql`，随后执行 `docs/sql/V1.0.1__seed.sql` 导入演示数据。种子数据中的食堂、档口和菜品名称均为虚构示例，接入实际校园前应替换。通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD`、`SERVER_PORT` 和 `SPRING_PROFILES_ACTIVE` 环境变量覆盖配置。`GET /api/health` 返回应用健康状态。
+默认连接 `localhost:3306/what_to_eat`，用户名默认为 `root`。种子数据中的食堂、档口和菜品名称均为虚构示例，接入实际校园前应替换。通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD`、`SERVER_PORT` 和 `SPRING_PROFILES_ACTIVE` 环境变量覆盖配置。`GET /api/health` 返回应用健康状态。运行后端单元测试与静态检查：
+
+```bash
+mvn verify
+```
 
 ### 阶段 2 数据接口
 
 所有接口统一返回 `ApiResponse`。支持食堂、档口、菜品和标签的分页查询及基础增删改查；菜品列表支持按食堂、档口、分类、辣度、餐段、标签和价格范围筛选，`GET/PUT /api/dishes/{id}/tags` 用于读取或替换菜品标签。删除采用逻辑删除。菜品无法在仍有子数据时删除档口，档口无法在仍有菜品时删除食堂。
 
-主要路由：`/api/canteens`、`/api/shops`、`/api/dishes`、`/api/tags`。分页参数为 `page`（默认 1）和 `size`（默认 20，最大 100）。
+主要路由：`/api/canteens`、`/api/shops`、`/api/dishes`、`/api/tags`。分页参数为 `page`（默认 1）和 `size`（默认 20，最大 100）。前端菜品筛选和档口详情可直接访问；食堂、档口、菜品及标签的写操作需管理员 Token。
+
+### 阶段 3 用户与口味
+
+`POST /api/auth/register` 和 `POST /api/auth/login` 返回 12 小时有效的 Bearer Token。注册账号默认是普通用户；管理员角色需由受信任的数据库维护流程授予，不能通过注册请求指定。Token 当前存于应用内存，服务重启后全部失效。登录后的用户可通过 `GET/PUT /api/preferences/me` 保存或修改问卷，`GET /api/preferences/me/profile` 获取由标签权重生成的画像。
+
+本地开发需要访问后台时，可先注册并登录，再由维护者在开发数据库中将指定账号升级为管理员：`UPDATE app_user SET role = 2 WHERE username = '替换为已核验的用户名' AND is_deleted = 0;`。不要在生产环境直接复制此操作。
+
+前端页面：`/login` 注册登录、`/survey` 口味问卷、`/profile` 画像、`/admin` 后台维护（仅管理员角色可进入）。
 
 ### 前端
 

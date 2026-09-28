@@ -90,6 +90,8 @@ public class ShopService {
     }
 
     private static void validatePage(int page, int size) {
-        if (page < 1 || size < 1 || size > 100) throw new BizException(400, "分页参数范围无效");
+        if (page < 1 || size < 1 || size > 100) {
+            throw new BizException(400, "分页参数范围无效");
+        }
     }
 }
