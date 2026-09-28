@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-test-only}
+      MYSQL_DATABASE: what_to_eat
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-test-data:/var/lib/mysql
+      - ./docs/sql/V1.0.0__init.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./docs/sql/V1.0.1__seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  backend:
+    build: .
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mysql://db:3306/what_to_eat?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-test-only}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"
+
+volumes:
+  mysql-test-data:

@@ -1,0 +1,6 @@
+{
+  "name": "what-to-eat-api-regression",
+  "private": true,
+  "scripts": { "test": "newman run collection.json -e environment.json --reporters cli,junit --reporter-junit-export results/newman.xml" },
+  "devDependencies": { "newman": "6.2.1" }
+}

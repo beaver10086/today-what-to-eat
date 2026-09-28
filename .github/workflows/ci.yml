@@ -1,40 +1,119 @@
-name: CI
+name: Quality and test deployment
 
 on:
   push:
-    branches: [main, develop, "feature/**", "bugfix/**"]
+    branches: [main, master, develop]
   pull_request:
-    branches: [main, develop]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   backend:
-    name: Backend build
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: local-test-only
+          MYSQL_DATABASE: what_to_eat
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -plocal-test-only"
+          --health-interval=5s --health-timeout=3s --health-retries=30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Initialize integration database
+        run: |
+          mysql --host=127.0.0.1 --port=3306 --user=root --password=local-test-only < docs/sql/V1.0.0__init.sql
+          mysql --host=127.0.0.1 --port=3306 --user=root --password=local-test-only < docs/sql/V1.0.1__seed.sql
+      - name: Verify backend and JaCoCo coverage gates
+        run: mvn -B -V verify
+      - name: Build frontend
+        working-directory: frontend
+        run: npm ci && npm run lint && npm run build
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium webkit
+      - name: Run device and responsive checks
+        working-directory: frontend
+        run: npm run test:e2e
+      - name: Start API for regression and load checks
+        env:
+          SPRING_PROFILES_ACTIVE: prod
+          DB_URL: jdbc:mysql://127.0.0.1:3306/what_to_eat?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+          DB_USERNAME: root
+          DB_PASSWORD: local-test-only
+        run: |
+          nohup java -jar target/what-to-eat-0.1.0-SNAPSHOT.jar > backend.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8080/api/health; then exit 0; fi
+            sleep 2
+          done
+          cat backend.log
+          exit 1
+      - name: Run Newman API regression
+        run: |
+          npm ci --prefix tests/newman
+          npm test --prefix tests/newman
+      - name: Run 30-user JMeter baseline
+        run: |
+          mkdir -p tests/jmeter/results
+          docker run --rm --network host -v "$GITHUB_WORKSPACE:/workspace" justb4/jmeter:5.6.3 \
+            -n -t /workspace/tests/jmeter/recommendation-load.jmx \
+            -l /workspace/tests/jmeter/results/recommendation.jtl \
+            -JBASE_URL=http://127.0.0.1:8080
+          python tests/jmeter/check_results.py tests/jmeter/results/recommendation.jtl
+      - name: Upload test and performance reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-6-reports
+          path: |
+            target/site/jacoco/
+            frontend/playwright-report/
+            frontend/test-results/
+            tests/newman/results/
+            tests/jmeter/results/
+            backend.log
+          if-no-files-found: ignore
+
+  sonarqube:
+    if: ${{ vars.SONAR_HOST_URL != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '21'
           cache: maven
-      - run: mvn -B clean verify
-
-  frontend:
-    name: Frontend lint and build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run build
+      - name: Analyze and wait for the server quality gate
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "SONAR_TOKEN is missing; configure it to enable SonarQube analysis."
+            exit 1
+          fi
+          project_key="${SONAR_PROJECT_KEY:-${GITHUB_REPOSITORY//\//_}}"
+          mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar \
+            -Dsonar.host.url="$SONAR_HOST_URL" \
+            -Dsonar.token="$SONAR_TOKEN" \
+            -Dsonar.projectKey="$project_key" \
+            -Dsonar.qualitygate.wait=true \
+            -Dsonar.qualitygate.timeout=300
