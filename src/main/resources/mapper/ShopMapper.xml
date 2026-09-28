@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.studyroom.mapper.ShopMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `shop`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="canteenId != null">`canteen_id`,</if>
+            <if test="shopName != null">`shop_name`,</if>
+            <if test="locationDesc != null">`location_desc`,</if>
+            <if test="openTime != null">`open_time`,</if>
+            <if test="closeTime != null">`close_time`,</if>
+            <if test="cuisine != null">`cuisine`,</if>
+            <if test="avgPrice != null">`avg_price`,</if>
+            <if test="rating != null">`rating`,</if>
+            <if test="ratingCount != null">`rating_count`,</if>
+            <if test="coverUrl != null">`cover_url`,</if>
+            <if test="description != null">`description`,</if>
+            <if test="status != null">`status`,</if>
+            <if test="sortOrder != null">`sort_order`,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="canteenId != null">#{canteenId},</if>
+            <if test="shopName != null">#{shopName},</if>
+            <if test="locationDesc != null">#{locationDesc},</if>
+            <if test="openTime != null">#{openTime},</if>
+            <if test="closeTime != null">#{closeTime},</if>
+            <if test="cuisine != null">#{cuisine},</if>
+            <if test="avgPrice != null">#{avgPrice},</if>
+            <if test="rating != null">#{rating},</if>
+            <if test="ratingCount != null">#{ratingCount},</if>
+            <if test="coverUrl != null">#{coverUrl},</if>
+            <if test="description != null">#{description},</if>
+            <if test="status != null">#{status},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+        </trim>
+    </insert>
+    <select id="selectById" resultType="com.studyroom.model.Shop">
+        SELECT `id`,
+        `canteen_id`,
+        `shop_name`,
+        `location_desc`,
+        `open_time`,
+        `close_time`,
+        `cuisine`,
+        `avg_price`,
+        `rating`,
+        `rating_count`,
+        `cover_url`,
+        `description`,
+        `status`,
+        `sort_order`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `shop` WHERE `id` = #{id} AND `is_deleted` = 0
+    </select>
+    <update id="update">
+        UPDATE `shop` SET `canteen_id` = #{canteenId},
+        `shop_name` = #{shopName},
+        `location_desc` = #{locationDesc},
+        `open_time` = #{openTime},
+        `close_time` = #{closeTime},
+        `cuisine` = #{cuisine},
+        `avg_price` = #{avgPrice},
+        `rating` = #{rating},
+        `rating_count` = #{ratingCount},
+        `cover_url` = #{coverUrl},
+        `description` = #{description},
+        `status` = #{status},
+        `sort_order` = #{sortOrder}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <update id="deleteById">
+        UPDATE `shop` SET `is_deleted` = 1, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <select id="selectPage" resultType="com.studyroom.model.Shop">
+        SELECT `id`,
+        `canteen_id`,
+        `shop_name`,
+        `location_desc`,
+        `open_time`,
+        `close_time`,
+        `cuisine`,
+        `avg_price`,
+        `rating`,
+        `rating_count`,
+        `cover_url`,
+        `description`,
+        `status`,
+        `sort_order`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `shop` WHERE `is_deleted` = 0
+        ORDER BY `id` DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM `shop` WHERE `is_deleted` = 0
+    </select>
+    <select id="countByCanteenId" resultType="long">
+        SELECT COUNT(*) FROM `shop` WHERE `canteen_id` = #{canteenId} AND `is_deleted` = 0
+    </select>
+</mapper>

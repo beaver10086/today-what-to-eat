@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.studyroom.mapper.TagMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `tag`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="tagName != null">`tag_name`,</if>
+            <if test="tagType != null">`tag_type`,</if>
+            <if test="sortOrder != null">`sort_order`,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="tagName != null">#{tagName},</if>
+            <if test="tagType != null">#{tagType},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+        </trim>
+    </insert>
+    <select id="selectById" resultType="com.studyroom.model.Tag">
+        SELECT `id`,
+        `tag_name`,
+        `tag_type`,
+        `sort_order`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `tag` WHERE `id` = #{id} AND `is_deleted` = 0
+    </select>
+    <update id="update">
+        UPDATE `tag` SET `tag_name` = #{tagName},
+        `tag_type` = #{tagType},
+        `sort_order` = #{sortOrder}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <update id="deleteById">
+        UPDATE `tag` SET `is_deleted` = 1, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <select id="selectPage" resultType="com.studyroom.model.Tag">
+        SELECT `id`,
+        `tag_name`,
+        `tag_type`,
+        `sort_order`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `tag` WHERE `is_deleted` = 0
+        ORDER BY `id` DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM `tag` WHERE `is_deleted` = 0
+    </select>
+</mapper>

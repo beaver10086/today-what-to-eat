@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.studyroom.mapper.AppUserMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `app_user`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="username != null">`username`,</if>
+            <if test="password != null">`password`,</if>
+            <if test="nickname != null">`nickname`,</if>
+            <if test="avatarUrl != null">`avatar_url`,</if>
+            <if test="phone != null">`phone`,</if>
+            <if test="role != null">`role`,</if>
+            <if test="status != null">`status`,</if>
+            <if test="lastLoginTime != null">`last_login_time`,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="username != null">#{username},</if>
+            <if test="password != null">#{password},</if>
+            <if test="nickname != null">#{nickname},</if>
+            <if test="avatarUrl != null">#{avatarUrl},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="role != null">#{role},</if>
+            <if test="status != null">#{status},</if>
+            <if test="lastLoginTime != null">#{lastLoginTime},</if>
+        </trim>
+    </insert>
+    <select id="selectById" resultType="com.studyroom.model.AppUser">
+        SELECT `id`,
+        `username`,
+        `password`,
+        `nickname`,
+        `avatar_url`,
+        `phone`,
+        `role`,
+        `status`,
+        `last_login_time`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `app_user` WHERE `id` = #{id} AND `is_deleted` = 0
+    </select>
+    <update id="update">
+        UPDATE `app_user` SET `username` = #{username},
+        `password` = #{password},
+        `nickname` = #{nickname},
+        `avatar_url` = #{avatarUrl},
+        `phone` = #{phone},
+        `role` = #{role},
+        `status` = #{status},
+        `last_login_time` = #{lastLoginTime}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <update id="deleteById">
+        UPDATE `app_user` SET `is_deleted` = 1, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <select id="selectPage" resultType="com.studyroom.model.AppUser">
+        SELECT `id`,
+        `username`,
+        `password`,
+        `nickname`,
+        `avatar_url`,
+        `phone`,
+        `role`,
+        `status`,
+        `last_login_time`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `app_user` WHERE `is_deleted` = 0
+        ORDER BY `id` DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM `app_user` WHERE `is_deleted` = 0
+    </select>
+</mapper>

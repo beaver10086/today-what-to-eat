@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.studyroom.mapper.DishMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `dish`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="shopId != null">`shop_id`,</if>
+            <if test="dishName != null">`dish_name`,</if>
+            <if test="price != null">`price`,</if>
+            <if test="category != null">`category`,</if>
+            <if test="mealType != null">`meal_type`,</if>
+            <if test="spiceLevel != null">`spice_level`,</if>
+            <if test="calorie != null">`calorie`,</if>
+            <if test="description != null">`description`,</if>
+            <if test="imageUrl != null">`image_url`,</if>
+            <if test="isSignature != null">`is_signature`,</if>
+            <if test="isAvailable != null">`is_available`,</if>
+            <if test="rating != null">`rating`,</if>
+            <if test="ratingCount != null">`rating_count`,</if>
+            <if test="likeCount != null">`like_count`,</if>
+            <if test="dislikeCount != null">`dislike_count`,</if>
+            <if test="favoriteCount != null">`favorite_count`,</if>
+            <if test="recommendCount != null">`recommend_count`,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="shopId != null">#{shopId},</if>
+            <if test="dishName != null">#{dishName},</if>
+            <if test="price != null">#{price},</if>
+            <if test="category != null">#{category},</if>
+            <if test="mealType != null">#{mealType},</if>
+            <if test="spiceLevel != null">#{spiceLevel},</if>
+            <if test="calorie != null">#{calorie},</if>
+            <if test="description != null">#{description},</if>
+            <if test="imageUrl != null">#{imageUrl},</if>
+            <if test="isSignature != null">#{isSignature},</if>
+            <if test="isAvailable != null">#{isAvailable},</if>
+            <if test="rating != null">#{rating},</if>
+            <if test="ratingCount != null">#{ratingCount},</if>
+            <if test="likeCount != null">#{likeCount},</if>
+            <if test="dislikeCount != null">#{dislikeCount},</if>
+            <if test="favoriteCount != null">#{favoriteCount},</if>
+            <if test="recommendCount != null">#{recommendCount},</if>
+        </trim>
+    </insert>
+    <select id="selectById" resultType="com.studyroom.model.Dish">
+        SELECT `id`,
+        `shop_id`,
+        `dish_name`,
+        `price`,
+        `category`,
+        `meal_type`,
+        `spice_level`,
+        `calorie`,
+        `description`,
+        `image_url`,
+        `is_signature`,
+        `is_available`,
+        `rating`,
+        `rating_count`,
+        `like_count`,
+        `dislike_count`,
+        `favorite_count`,
+        `recommend_count`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `dish` WHERE `id` = #{id} AND `is_deleted` = 0
+    </select>
+    <update id="update">
+        UPDATE `dish` SET `shop_id` = #{shopId},
+        `dish_name` = #{dishName},
+        `price` = #{price},
+        `category` = #{category},
+        `meal_type` = #{mealType},
+        `spice_level` = #{spiceLevel},
+        `calorie` = #{calorie},
+        `description` = #{description},
+        `image_url` = #{imageUrl},
+        `is_signature` = #{isSignature},
+        `is_available` = #{isAvailable},
+        `rating` = #{rating},
+        `rating_count` = #{ratingCount},
+        `like_count` = #{likeCount},
+        `dislike_count` = #{dislikeCount},
+        `favorite_count` = #{favoriteCount},
+        `recommend_count` = #{recommendCount}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <update id="deleteById">
+        UPDATE `dish` SET `is_deleted` = 1, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <select id="selectPage" resultType="com.studyroom.model.Dish">
+        SELECT `id`,
+        `shop_id`,
+        `dish_name`,
+        `price`,
+        `category`,
+        `meal_type`,
+        `spice_level`,
+        `calorie`,
+        `description`,
+        `image_url`,
+        `is_signature`,
+        `is_available`,
+        `rating`,
+        `rating_count`,
+        `like_count`,
+        `dislike_count`,
+        `favorite_count`,
+        `recommend_count`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `dish` WHERE `is_deleted` = 0
+        ORDER BY `id` DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM `dish` WHERE `is_deleted` = 0
+    </select>
+
+    <sql id="dishSearchWhere">
+        d.`is_deleted` = 0 AND d.`is_available` = 1
+        AND s.`is_deleted` = 0 AND s.`status` = 1
+        AND c.`is_deleted` = 0 AND c.`status` = 1
+        <if test="query.canteenId != null">AND c.`id` = #{query.canteenId}</if>
+        <if test="query.shopId != null">AND d.`shop_id` = #{query.shopId}</if>
+        <if test="query.category != null">AND d.`category` = #{query.category}</if>
+        <if test="query.spiceLevel != null">AND d.`spice_level` &lt;= #{query.spiceLevel}</if>
+        <if test="query.mealType != null">AND (d.`meal_type` &amp; #{query.mealType}) &gt; 0</if>
+        <if test="query.minPrice != null">AND d.`price` &gt;= #{query.minPrice}</if>
+        <if test="query.maxPrice != null">AND d.`price` &lt;= #{query.maxPrice}</if>
+        <if test="query.tagId != null">
+            AND EXISTS (
+                SELECT 1 FROM `dish_tag` dt
+                JOIN `tag` t ON t.`id` = dt.`tag_id` AND t.`is_deleted` = 0
+                WHERE dt.`dish_id` = d.`id` AND dt.`tag_id` = #{query.tagId}
+                  AND dt.`is_deleted` = 0
+            )
+        </if>
+    </sql>
+
+    <resultMap id="dishViewMap" type="com.studyroom.dto.DishView">
+        <constructor>
+            <idArg column="id" javaType="java.lang.Long"/>
+            <arg column="shopId" javaType="java.lang.Long"/>
+            <arg column="shopName" javaType="java.lang.String"/>
+            <arg column="canteenId" javaType="java.lang.Long"/>
+            <arg column="canteenName" javaType="java.lang.String"/>
+            <arg column="dishName" javaType="java.lang.String"/>
+            <arg column="price" javaType="java.math.BigDecimal"/>
+            <arg column="category" javaType="java.lang.Integer"/>
+            <arg column="mealType" javaType="java.lang.Integer"/>
+            <arg column="spiceLevel" javaType="java.lang.Integer"/>
+            <arg column="calorie" javaType="java.lang.Integer"/>
+            <arg column="description" javaType="java.lang.String"/>
+            <arg column="imageUrl" javaType="java.lang.String"/>
+            <arg column="isSignature" javaType="java.lang.Integer"/>
+            <arg column="isAvailable" javaType="java.lang.Integer"/>
+            <arg column="rating" javaType="java.math.BigDecimal"/>
+        </constructor>
+    </resultMap>
+
+    <select id="search" resultMap="dishViewMap">
+        SELECT d.`id`, d.`shop_id` AS `shopId`, s.`shop_name` AS `shopName`,
+               s.`canteen_id` AS `canteenId`, c.`canteen_name` AS `canteenName`,
+               d.`dish_name` AS `dishName`, d.`price`, d.`category`,
+               d.`meal_type` AS `mealType`, d.`spice_level` AS `spiceLevel`,
+               d.`calorie`, d.`description`, d.`image_url` AS `imageUrl`,
+               d.`is_signature` AS `isSignature`, d.`is_available` AS `isAvailable`, d.`rating`
+        FROM `dish` d
+        JOIN `shop` s ON s.`id` = d.`shop_id`
+        JOIN `canteen` c ON c.`id` = s.`canteen_id`
+        WHERE <include refid="dishSearchWhere"/>
+        ORDER BY d.`is_signature` DESC, d.`id` DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countMatches" resultType="long">
+        SELECT COUNT(*)
+        FROM `dish` d
+        JOIN `shop` s ON s.`id` = d.`shop_id`
+        JOIN `canteen` c ON c.`id` = s.`canteen_id`
+        WHERE <include refid="dishSearchWhere"/>
+    </select>
+
+    <select id="countByShopId" resultType="long">
+        SELECT COUNT(*) FROM `dish` WHERE `shop_id` = #{shopId} AND `is_deleted` = 0
+    </select>
+</mapper>

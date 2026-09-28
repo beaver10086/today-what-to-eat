@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.studyroom.mapper.PreferenceMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `preference`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">`user_id`,</if>
+            <if test="maxSpiceLevel != null">`max_spice_level`,</if>
+            <if test="budgetMin != null">`budget_min`,</if>
+            <if test="budgetMax != null">`budget_max`,</if>
+            <if test="likeTagIds != null">`like_tag_ids`,</if>
+            <if test="dislikeTagIds != null">`dislike_tag_ids`,</if>
+            <if test="dietType != null">`diet_type`,</if>
+            <if test="profileSummary != null">`profile_summary`,</if>
+            <if test="questionnaireVersion != null">`questionnaire_version`,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="maxSpiceLevel != null">#{maxSpiceLevel},</if>
+            <if test="budgetMin != null">#{budgetMin},</if>
+            <if test="budgetMax != null">#{budgetMax},</if>
+            <if test="likeTagIds != null">#{likeTagIds},</if>
+            <if test="dislikeTagIds != null">#{dislikeTagIds},</if>
+            <if test="dietType != null">#{dietType},</if>
+            <if test="profileSummary != null">#{profileSummary},</if>
+            <if test="questionnaireVersion != null">#{questionnaireVersion},</if>
+        </trim>
+    </insert>
+    <select id="selectById" resultType="com.studyroom.model.Preference">
+        SELECT `id`,
+        `user_id`,
+        `max_spice_level`,
+        `budget_min`,
+        `budget_max`,
+        `like_tag_ids`,
+        `dislike_tag_ids`,
+        `diet_type`,
+        `profile_summary`,
+        `questionnaire_version`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `preference` WHERE `id` = #{id} AND `is_deleted` = 0
+    </select>
+    <update id="update">
+        UPDATE `preference` SET `user_id` = #{userId},
+        `max_spice_level` = #{maxSpiceLevel},
+        `budget_min` = #{budgetMin},
+        `budget_max` = #{budgetMax},
+        `like_tag_ids` = #{likeTagIds},
+        `dislike_tag_ids` = #{dislikeTagIds},
+        `diet_type` = #{dietType},
+        `profile_summary` = #{profileSummary},
+        `questionnaire_version` = #{questionnaireVersion}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <update id="deleteById">
+        UPDATE `preference` SET `is_deleted` = 1, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <select id="selectPage" resultType="com.studyroom.model.Preference">
+        SELECT `id`,
+        `user_id`,
+        `max_spice_level`,
+        `budget_min`,
+        `budget_max`,
+        `like_tag_ids`,
+        `dislike_tag_ids`,
+        `diet_type`,
+        `profile_summary`,
+        `questionnaire_version`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `preference` WHERE `is_deleted` = 0
+        ORDER BY `id` DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM `preference` WHERE `is_deleted` = 0
+    </select>
+</mapper>

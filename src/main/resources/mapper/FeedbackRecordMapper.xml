@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.studyroom.mapper.FeedbackRecordMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `feedback_record`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">`user_id`,</if>
+            <if test="recommendationId != null">`recommendation_id`,</if>
+            <if test="dishId != null">`dish_id`,</if>
+            <if test="feedbackType != null">`feedback_type`,</if>
+            <if test="reasonTag != null">`reason_tag`,</if>
+            <if test="comment != null">`comment`,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="recommendationId != null">#{recommendationId},</if>
+            <if test="dishId != null">#{dishId},</if>
+            <if test="feedbackType != null">#{feedbackType},</if>
+            <if test="reasonTag != null">#{reasonTag},</if>
+            <if test="comment != null">#{comment},</if>
+        </trim>
+    </insert>
+    <select id="selectById" resultType="com.studyroom.model.FeedbackRecord">
+        SELECT `id`,
+        `user_id`,
+        `recommendation_id`,
+        `dish_id`,
+        `feedback_type`,
+        `reason_tag`,
+        `comment`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `feedback_record` WHERE `id` = #{id} AND `is_deleted` = 0
+    </select>
+    <update id="update">
+        UPDATE `feedback_record` SET `user_id` = #{userId},
+        `recommendation_id` = #{recommendationId},
+        `dish_id` = #{dishId},
+        `feedback_type` = #{feedbackType},
+        `reason_tag` = #{reasonTag},
+        `comment` = #{comment}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <update id="deleteById">
+        UPDATE `feedback_record` SET `is_deleted` = 1, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <select id="selectPage" resultType="com.studyroom.model.FeedbackRecord">
+        SELECT `id`,
+        `user_id`,
+        `recommendation_id`,
+        `dish_id`,
+        `feedback_type`,
+        `reason_tag`,
+        `comment`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `feedback_record` WHERE `is_deleted` = 0
+        ORDER BY `id` DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM `feedback_record` WHERE `is_deleted` = 0
+    </select>
+</mapper>

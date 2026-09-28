@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.studyroom.mapper.CanteenMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `canteen`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="canteenName != null">`canteen_name`,</if>
+            <if test="campus != null">`campus`,</if>
+            <if test="location != null">`location`,</if>
+            <if test="openTime != null">`open_time`,</if>
+            <if test="closeTime != null">`close_time`,</if>
+            <if test="description != null">`description`,</if>
+            <if test="coverUrl != null">`cover_url`,</if>
+            <if test="sortOrder != null">`sort_order`,</if>
+            <if test="status != null">`status`,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="canteenName != null">#{canteenName},</if>
+            <if test="campus != null">#{campus},</if>
+            <if test="location != null">#{location},</if>
+            <if test="openTime != null">#{openTime},</if>
+            <if test="closeTime != null">#{closeTime},</if>
+            <if test="description != null">#{description},</if>
+            <if test="coverUrl != null">#{coverUrl},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="status != null">#{status},</if>
+        </trim>
+    </insert>
+    <select id="selectById" resultType="com.studyroom.model.Canteen">
+        SELECT `id`,
+        `canteen_name`,
+        `campus`,
+        `location`,
+        `open_time`,
+        `close_time`,
+        `description`,
+        `cover_url`,
+        `sort_order`,
+        `status`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `canteen` WHERE `id` = #{id} AND `is_deleted` = 0
+    </select>
+    <update id="update">
+        UPDATE `canteen` SET `canteen_name` = #{canteenName},
+        `campus` = #{campus},
+        `location` = #{location},
+        `open_time` = #{openTime},
+        `close_time` = #{closeTime},
+        `description` = #{description},
+        `cover_url` = #{coverUrl},
+        `sort_order` = #{sortOrder},
+        `status` = #{status}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <update id="deleteById">
+        UPDATE `canteen` SET `is_deleted` = 1, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <select id="selectPage" resultType="com.studyroom.model.Canteen">
+        SELECT `id`,
+        `canteen_name`,
+        `campus`,
+        `location`,
+        `open_time`,
+        `close_time`,
+        `description`,
+        `cover_url`,
+        `sort_order`,
+        `status`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `canteen` WHERE `is_deleted` = 0
+        ORDER BY `id` DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM `canteen` WHERE `is_deleted` = 0
+    </select>
+</mapper>

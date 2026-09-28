@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.studyroom.mapper.DishTagMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `dish_tag`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="dishId != null">`dish_id`,</if>
+            <if test="tagId != null">`tag_id`,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="dishId != null">#{dishId},</if>
+            <if test="tagId != null">#{tagId},</if>
+        </trim>
+    </insert>
+    <select id="selectById" resultType="com.studyroom.model.DishTag">
+        SELECT `id`,
+        `dish_id`,
+        `tag_id`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `dish_tag` WHERE `id` = #{id} AND `is_deleted` = 0
+    </select>
+    <update id="update">
+        UPDATE `dish_tag` SET `dish_id` = #{dishId},
+        `tag_id` = #{tagId}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <update id="deleteById">
+        UPDATE `dish_tag` SET `is_deleted` = 1, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id} AND `is_deleted` = 0
+    </update>
+    <select id="selectPage" resultType="com.studyroom.model.DishTag">
+        SELECT `id`,
+        `dish_id`,
+        `tag_id`,
+        `create_time`,
+        `update_time`,
+        `is_deleted` FROM `dish_tag` WHERE `is_deleted` = 0
+        ORDER BY `id` DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM `dish_tag` WHERE `is_deleted` = 0
+    </select>
+    <select id="selectByDishId" resultType="com.studyroom.model.DishTag">
+        SELECT `id`, `dish_id`, `tag_id`, `create_time`, `update_time`, `is_deleted`
+        FROM `dish_tag` WHERE `dish_id` = #{dishId} AND `is_deleted` = 0
+        ORDER BY `id`
+    </select>
+    <select id="selectAllByDishId" resultType="com.studyroom.model.DishTag">
+        SELECT `id`, `dish_id`, `tag_id`, `create_time`, `update_time`, `is_deleted`
+        FROM `dish_tag` WHERE `dish_id` = #{dishId} ORDER BY `id`
+    </select>
+    <update id="setDeleted">
+        UPDATE `dish_tag` SET `is_deleted` = #{deleted}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id}
+    </update>
+    <update id="deleteActiveByDishId">
+        UPDATE `dish_tag` SET `is_deleted` = 1, `update_time` = CURRENT_TIMESTAMP
+        WHERE `dish_id` = #{dishId} AND `is_deleted` = 0
+    </update>
+</mapper>
