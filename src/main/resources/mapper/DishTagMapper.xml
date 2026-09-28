@@ -59,4 +59,13 @@
         UPDATE `dish_tag` SET `is_deleted` = 1, `update_time` = CURRENT_TIMESTAMP
         WHERE `dish_id` = #{dishId} AND `is_deleted` = 0
     </update>
+    <select id="selectTagsByDishIds" resultType="com.studyroom.dto.DishTagWeight">
+        SELECT dt.`dish_id` AS `dishId`, t.`id` AS `tagId`, t.`tag_name` AS `tagName`,
+               COALESCE(utp.`weight`, 0) AS `weight`
+        FROM `dish_tag` dt JOIN `tag` t ON t.`id` = dt.`tag_id` AND t.`is_deleted` = 0
+        LEFT JOIN `user_taste_profile` utp ON utp.`tag_id` = t.`id` AND utp.`user_id` = #{userId}
+             AND utp.`is_deleted` = 0
+        WHERE dt.`is_deleted` = 0 AND dt.`dish_id` IN
+        <foreach collection="dishIds" item="dishId" open="(" separator="," close=")">#{dishId}</foreach>
+    </select>
 </mapper>

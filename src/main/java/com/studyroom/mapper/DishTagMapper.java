@@ -11,6 +11,9 @@ public interface DishTagMapper extends BaseMapper<DishTag> {
 
     List<DishTag> selectAllByDishId(@Param("dishId") Long dishId);
 
+    List<com.studyroom.dto.DishTagWeight> selectTagsByDishIds(@Param("dishIds") List<Long> dishIds,
+                                                               @Param("userId") Long userId);
+
     int deleteActiveByDishId(@Param("dishId") Long dishId);
 
     int setDeleted(@Param("id") Long id, @Param("deleted") int deleted);

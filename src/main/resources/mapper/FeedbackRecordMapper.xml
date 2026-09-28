@@ -62,4 +62,10 @@
     <select id="count" resultType="long">
         SELECT COUNT(*) FROM `feedback_record` WHERE `is_deleted` = 0
     </select>
+    <select id="selectRecentByUserAndDish" resultType="com.studyroom.model.FeedbackRecord">
+        SELECT `id`, `user_id`, `recommendation_id`, `dish_id`, `feedback_type`, `reason_tag`,
+               `comment`, `create_time`, `update_time`, `is_deleted`
+        FROM `feedback_record` WHERE `user_id` = #{userId} AND `dish_id` = #{dishId}
+          AND `is_deleted` = 0 ORDER BY `id` DESC LIMIT #{limit}
+    </select>
 </mapper>

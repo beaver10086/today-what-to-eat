@@ -40,6 +40,12 @@ const router = createRouter({
       component: () => import('../views/ProfileView.vue'),
       meta: { title: '我的口味画像', requiresAuth: true },
     },
+    {
+      path: '/recommendations',
+      name: 'recommendations',
+      component: () => import('../views/RecommendationView.vue'),
+      meta: { title: '今日推荐', requiresAuth: true },
+    },
   ],
 })
 

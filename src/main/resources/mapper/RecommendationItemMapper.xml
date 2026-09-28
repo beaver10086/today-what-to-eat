@@ -62,4 +62,10 @@
     <select id="count" resultType="long">
         SELECT COUNT(*) FROM `recommendation_item` WHERE `is_deleted` = 0
     </select>
+    <select id="selectByRecommendationId" resultType="com.studyroom.model.RecommendationItem">
+        SELECT `id`, `recommendation_id`, `dish_id`, `shop_id`, `rank_no`, `score`, `reason`,
+               `create_time`, `update_time`, `is_deleted`
+        FROM `recommendation_item` WHERE `recommendation_id` = #{recommendationId} AND `is_deleted` = 0
+        ORDER BY `rank_no` ASC
+    </select>
 </mapper>

@@ -82,4 +82,62 @@
     <select id="count" resultType="long">
         SELECT COUNT(*) FROM `recommendation` WHERE `is_deleted` = 0
     </select>
+    <resultMap id="candidateDishMap" type="com.studyroom.dto.DishView">
+        <constructor>
+            <idArg column="id" javaType="java.lang.Long"/>
+            <arg column="shopId" javaType="java.lang.Long"/>
+            <arg column="shopName" javaType="java.lang.String"/>
+            <arg column="canteenId" javaType="java.lang.Long"/>
+            <arg column="canteenName" javaType="java.lang.String"/>
+            <arg column="dishName" javaType="java.lang.String"/>
+            <arg column="price" javaType="java.math.BigDecimal"/>
+            <arg column="category" javaType="java.lang.Integer"/>
+            <arg column="mealType" javaType="java.lang.Integer"/>
+            <arg column="spiceLevel" javaType="java.lang.Integer"/>
+            <arg column="calorie" javaType="java.lang.Integer"/>
+            <arg column="description" javaType="java.lang.String"/>
+            <arg column="imageUrl" javaType="java.lang.String"/>
+            <arg column="isSignature" javaType="java.lang.Integer"/>
+            <arg column="isAvailable" javaType="java.lang.Integer"/>
+            <arg column="rating" javaType="java.math.BigDecimal"/>
+        </constructor>
+    </resultMap>
+    <select id="selectCandidates" resultMap="candidateDishMap">
+        SELECT d.`id`, d.`shop_id` AS `shopId`, s.`shop_name` AS `shopName`,
+               s.`canteen_id` AS `canteenId`, c.`canteen_name` AS `canteenName`,
+               d.`dish_name` AS `dishName`, d.`price`, d.`category`,
+               d.`meal_type` AS `mealType`, d.`spice_level` AS `spiceLevel`, d.`calorie`,
+               d.`description`, d.`image_url` AS `imageUrl`,
+               d.`is_signature` AS `isSignature`, d.`is_available` AS `isAvailable`, d.`rating`
+        FROM `dish` d JOIN `shop` s ON s.`id` = d.`shop_id`
+        JOIN `canteen` c ON c.`id` = s.`canteen_id`
+        WHERE d.`is_deleted` = 0 AND d.`is_available` = 1
+          AND s.`is_deleted` = 0 AND s.`status` = 1
+          AND c.`is_deleted` = 0 AND c.`status` = 1
+          AND MOD(FLOOR(d.`meal_type` / #{mealMask}), 2) = 1
+          AND d.`spice_level` &lt;= #{maxSpice}
+        <if test="budgetMin != null">AND d.`price` &gt;= #{budgetMin}</if>
+        <if test="budgetMax != null">AND d.`price` &lt;= #{budgetMax}</if>
+        <if test="excludeDishIds != null and excludeDishIds.size() > 0">
+            AND d.`id` NOT IN
+            <foreach collection="excludeDishIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        </if>
+        <if test="dislikeTagIds != null and dislikeTagIds.size() > 0">
+            AND NOT EXISTS (SELECT 1 FROM `dish_tag` bad
+                WHERE bad.`dish_id` = d.`id` AND bad.`is_deleted` = 0 AND bad.`tag_id` IN
+                <foreach collection="dislikeTagIds" item="id" open="(" separator="," close=")">#{id}</foreach>)
+        </if>
+        <if test="dietType == 1">
+            AND (d.`category` = 3 OR EXISTS (SELECT 1 FROM `dish_tag` veg JOIN `tag` vt
+                ON vt.`id` = veg.`tag_id` AND vt.`is_deleted` = 0
+                WHERE veg.`dish_id` = d.`id` AND veg.`is_deleted` = 0 AND vt.`tag_name` = '素食'))
+        </if>
+        <if test="dietType == 2">
+            AND EXISTS (SELECT 1 FROM `dish_tag` halal JOIN `tag` ht
+                ON ht.`id` = halal.`tag_id` AND ht.`is_deleted` = 0
+                WHERE halal.`dish_id` = d.`id` AND halal.`is_deleted` = 0 AND ht.`tag_name` = '清真')
+        </if>
+        ORDER BY d.`is_signature` DESC, d.`rating` DESC, d.`id` ASC
+        LIMIT 500
+    </select>
 </mapper>
