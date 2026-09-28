@@ -57,6 +57,12 @@ async function signOut() {
         </RouterLink>
         <RouterLink
           v-if="auth.isLoggedIn"
+          to="/favorites"
+        >
+          我的收藏
+        </RouterLink>
+        <RouterLink
+          v-if="auth.isLoggedIn"
           to="/survey"
         >
           口味问卷

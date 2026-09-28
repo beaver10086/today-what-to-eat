@@ -4,8 +4,12 @@ import { showToast } from 'vant'
 import { useRouter } from 'vue-router'
 import { createRecommendation, getNextRecommendation, sendRecommendationFeedback } from '../api/recommendation'
 import type { RecommendationResult } from '../api/recommendation'
+import { useAuthStore } from '../stores/auth'
+import { useFavorites } from '../composables/useFavorites'
 
 const router = useRouter()
+const auth = useAuthStore()
+const favorites = useFavorites(1, auth, router)
 const mealType = ref(guessMeal())
 const result = ref<RecommendationResult | null>(null)
 const loading = ref(false)
@@ -65,6 +69,7 @@ async function nextGroup(dishId: number) {
 }
 
 onMounted(loadRecommendation)
+onMounted(favorites.refresh)
 </script>
 
 <template>
@@ -150,6 +155,12 @@ onMounted(loadRecommendation)
               <span>符合你的口味设置</span>
             </div>
             <div class="recommendation-actions">
+              <button
+                :disabled="favorites.isBusy(item.dish.id)"
+                @click="favorites.toggle(item.dish.id)"
+              >
+                {{ favorites.isSaved(item.dish.id) ? '已收藏' : '收藏' }}
+              </button>
               <button
                 :disabled="busyDishId === item.dish.id"
                 @click="feedback(item.dish.id, 1)"

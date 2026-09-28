@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getCanteen, getShop, listDishes } from '../api/data'
 import type { Canteen, Dish, Shop } from '../api/data'
+import { useAuthStore } from '../stores/auth'
+import { useFavorites } from '../composables/useFavorites'
 
 const route = useRoute()
 const shop = ref<Shop | null>(null)
@@ -10,6 +12,10 @@ const canteen = ref<Canteen | null>(null)
 const dishes = ref<Dish[]>([])
 const loading = ref(true)
 const error = ref('')
+const auth = useAuthStore()
+const router = useRouter()
+const shopFavorites = useFavorites(2, auth, router)
+const dishFavorites = useFavorites(1, auth, router)
 
 async function load() {
   loading.value = true
@@ -29,6 +35,10 @@ async function load() {
 
 onMounted(load)
 watch(() => route.params.id, load)
+watch(() => auth.isLoggedIn, () => {
+  void shopFavorites.refresh()
+  void dishFavorites.refresh()
+}, { immediate: true })
 </script>
 
 <template>
@@ -70,6 +80,16 @@ watch(() => route.params.id, load)
         <div>
           <span class="eyebrow">{{ canteen?.campus }} · {{ canteen?.canteenName }}</span>
           <h1>{{ shop.shopName }}</h1>
+          <button
+            class="button secondary small shop-favorite-button"
+            :class="{ 'is-favorited': shopFavorites.isSaved(shop.id) }"
+            :aria-pressed="shopFavorites.isSaved(shop.id)"
+            :disabled="shopFavorites.isBusy(shop.id)"
+            type="button"
+            @click="shopFavorites.toggle(shop.id)"
+          >
+            {{ shopFavorites.isSaved(shop.id) ? '♥ 已收藏档口' : '♡ 收藏档口' }}
+          </button>
           <p>{{ shop.description || shop.cuisine || '校内食堂档口' }}</p>
           <div class="dish-meta">
             <span
@@ -104,7 +124,20 @@ watch(() => route.params.id, load)
           <div class="dish-body">
             <div class="dish-topline">
               <h2>{{ dish.dishName }}</h2>
-              <span class="price">¥{{ Number(dish.price).toFixed(2) }}</span>
+              <div class="dish-card-actions">
+                <span class="price">¥{{ Number(dish.price).toFixed(2) }}</span>
+                <button
+                  class="favorite-icon-button"
+                  :class="{ saved: dishFavorites.isSaved(dish.id) }"
+                  :aria-label="dishFavorites.isSaved(dish.id) ? '取消收藏' : '收藏菜品'"
+                  :aria-pressed="dishFavorites.isSaved(dish.id)"
+                  :disabled="dishFavorites.isBusy(dish.id)"
+                  type="button"
+                  @click.stop="dishFavorites.toggle(dish.id)"
+                >
+                  {{ dishFavorites.isSaved(dish.id) ? '♥' : '♡' }}
+                </button>
+              </div>
             </div>
             <p class="dish-description">
               {{ dish.description || '档口每日供应' }}

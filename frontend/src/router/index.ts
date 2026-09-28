@@ -46,6 +46,12 @@ const router = createRouter({
       component: () => import('../views/RecommendationView.vue'),
       meta: { title: '今日推荐', requiresAuth: true },
     },
+    {
+      path: '/favorites',
+      name: 'favorites',
+      component: () => import('../views/FavoritesView.vue'),
+      meta: { title: '我的收藏', requiresAuth: true },
+    },
   ],
 })
 

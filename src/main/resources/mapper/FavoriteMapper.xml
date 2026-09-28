@@ -47,4 +47,46 @@
     <select id="count" resultType="long">
         SELECT COUNT(*) FROM `favorite` WHERE `is_deleted` = 0
     </select>
+    <select id="selectByUserAndTarget" resultType="com.studyroom.model.Favorite">
+        SELECT `id`, `user_id`, `target_type`, `target_id`, `create_time`, `update_time`, `is_deleted`
+        FROM `favorite` WHERE `user_id` = #{userId} AND `target_type` = #{targetType}
+          AND `target_id` = #{targetId} ORDER BY `is_deleted` ASC LIMIT 1
+    </select>
+    <select id="selectTargetIds" resultType="long">
+        SELECT `target_id` FROM `favorite` WHERE `user_id` = #{userId}
+          AND `target_type` = #{targetType} AND `is_deleted` = 0 ORDER BY `id` DESC
+    </select>
+    <select id="countByUser" resultType="long">
+        SELECT COUNT(*) FROM `favorite` WHERE `user_id` = #{userId} AND `is_deleted` = 0
+        <if test="targetType != null">AND `target_type` = #{targetType}</if>
+    </select>
+    <update id="setDeleted">
+        UPDATE `favorite` SET `is_deleted` = #{isDeleted}, `update_time` = CURRENT_TIMESTAMP
+        WHERE `id` = #{id}
+    </update>
+    <select id="selectFavoriteViews" resultType="com.studyroom.dto.FavoriteView">
+        SELECT * FROM (
+            SELECT f.`id` AS `favoriteId`, 1 AS `targetType`, d.`id` AS `targetId`,
+                   COALESCE(d.`dish_name`, '已删除菜品') AS `targetName`,
+                   CONCAT(COALESCE(s.`shop_name`, '已删除档口'), ' · ', COALESCE(c.`canteen_name`, '')) AS `subtitle`,
+                   d.`image_url` AS `imageUrl`, d.`price`, s.`id` AS `shopId`,
+                   c.`id` AS `canteenId`, f.`create_time` AS `createTime`
+            FROM `favorite` f LEFT JOIN `dish` d ON d.`id` = f.`target_id`
+            LEFT JOIN `shop` s ON s.`id` = d.`shop_id`
+            LEFT JOIN `canteen` c ON c.`id` = s.`canteen_id`
+            WHERE f.`user_id` = #{userId} AND f.`target_type` = 1 AND f.`is_deleted` = 0
+            <if test="targetType != null and targetType != 1">AND 1 = 0</if>
+            UNION ALL
+            SELECT f.`id` AS `favoriteId`, 2 AS `targetType`, s.`id` AS `targetId`,
+                   COALESCE(s.`shop_name`, '已删除档口') AS `targetName`,
+                   CONCAT(COALESCE(c.`canteen_name`, ''), ' · ', COALESCE(s.`location_desc`, '档口')) AS `subtitle`,
+                   s.`cover_url` AS `imageUrl`, s.`avg_price` AS `price`, s.`id` AS `shopId`,
+                   c.`id` AS `canteenId`, f.`create_time` AS `createTime`
+            FROM `favorite` f LEFT JOIN `shop` s ON s.`id` = f.`target_id`
+            LEFT JOIN `canteen` c ON c.`id` = s.`canteen_id`
+            WHERE f.`user_id` = #{userId} AND f.`target_type` = 2 AND f.`is_deleted` = 0
+            <if test="targetType != null and targetType != 2">AND 1 = 0</if>
+        ) `favorite_items`
+        ORDER BY `createTime` DESC, `favoriteId` DESC LIMIT #{size} OFFSET #{offset}
+    </select>
 </mapper>

@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { showToast } from 'vant'
+import { useRouter } from 'vue-router'
 import { listCanteens, listDishes, listShops, listTags } from '../api/data'
 import type { Canteen, Dish, DishFilters, Shop, Tag } from '../api/data'
+import { useAuthStore } from '../stores/auth'
+import { useFavorites } from '../composables/useFavorites'
 
 const categories = ['主食', '荤菜', '素菜', '汤羹', '小吃', '饮品', '甜点']
 const canteens = ref<Canteen[]>([])
 const shops = ref<Shop[]>([])
 const tags = ref<Tag[]>([])
+const auth = useAuthStore()
+const router = useRouter()
+const favorites = useFavorites(1, auth, router)
 const dishes = ref<Dish[]>([])
 const total = ref(0)
 const state = ref<'loading' | 'ready' | 'empty' | 'error'>('loading')
@@ -116,6 +122,7 @@ onMounted(() => {
   void loadOptions()
   void search()
 })
+watch(() => auth.isLoggedIn, favorites.refresh, { immediate: true })
 </script>
 
 <template>
@@ -362,7 +369,20 @@ onMounted(() => {
         <div class="dish-body">
           <div class="dish-topline">
             <h2>{{ dish.dishName }}</h2>
-            <span class="price">¥{{ Number(dish.price).toFixed(2) }}</span>
+            <div class="dish-card-actions">
+              <span class="price">¥{{ Number(dish.price).toFixed(2) }}</span>
+              <button
+                class="favorite-icon-button"
+                :class="{ saved: favorites.isSaved(dish.id) }"
+                :aria-label="favorites.isSaved(dish.id) ? '取消收藏' : '收藏菜品'"
+                :aria-pressed="favorites.isSaved(dish.id)"
+                :disabled="favorites.isBusy(dish.id)"
+                type="button"
+                @click.stop="favorites.toggle(dish.id)"
+              >
+                {{ favorites.isSaved(dish.id) ? '♥' : '♡' }}
+              </button>
+            </div>
           </div>
           <div class="dish-meta">
             <span class="pill">{{ categories[dish.category - 1] }}</span>
