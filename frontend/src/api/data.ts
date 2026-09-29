@@ -71,10 +71,37 @@ export interface DishFilters {
   tagId?: number
   minPrice?: number
   maxPrice?: number
+  keyword?: string
+}
+
+export interface SearchIntent {
+  rawQuery: string
+  budgetMax?: number | null
+  maxSpiceLevel?: number | null
+  canteenKeyword?: string | null
+  shopKeyword?: string | null
+  mealType?: number | null
+  category?: number | null
+  keyword?: string | null
+  nearby: boolean
+}
+
+export interface DiscoveryResult {
+  conditions: SearchIntent
+  result: PageResult<Dish>
+  notice: string
+}
+
+export interface AssistantAnswer {
+  answer: string
+  conditions: SearchIntent
+  dishes: Dish[]
 }
 
 export const listDishes = (params: DishFilters) =>
   request.get<never, PageResult<Dish>>('/dishes', { params })
+export const getRandomDish = (params: DishFilters) =>
+  request.get<never, Dish>('/dishes/random', { params })
 export const getDish = (id: number) => request.get<never, Dish>(`/dishes/${id}`)
 export const listCanteens = () =>
   request.get<never, PageResult<Canteen>>('/canteens', { params: { size: 100 } })
@@ -84,6 +111,10 @@ export const listShops = (canteenId?: number) =>
 export const getShop = (id: number) => request.get<never, Shop>(`/shops/${id}`)
 export const listTags = () =>
   request.get<never, PageResult<Tag>>('/tags', { params: { size: 100 } })
+export const searchByNaturalLanguage = (message: string, page = 1) =>
+  request.post<never, DiscoveryResult>('/assistant/search', { message, page })
+export const askAssistant = (message: string) =>
+  request.post<never, AssistantAnswer>('/assistant/ask', { message })
 
 export const createCanteen = (body: Partial<Canteen>) => request.post('/canteens', body)
 export const updateCanteen = (id: number, body: Partial<Canteen>) =>

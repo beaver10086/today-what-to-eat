@@ -25,3 +25,8 @@ management:
         include: health,info
 server:
   port: ${SERVER_PORT:8080}
+app:
+  ai:
+    base-url: ${AI_BASE_URL:}
+    api-key: ${AI_API_KEY:}
+    model: ${AI_MODEL:}

@@ -137,6 +137,14 @@
                   AND dt.`is_deleted` = 0
             )
         </if>
+        <if test="query.keyword != null and query.keyword != ''">
+            AND (d.`dish_name` LIKE CONCAT('%', #{query.keyword}, '%')
+              OR COALESCE(d.`description`, '') LIKE CONCAT('%', #{query.keyword}, '%')
+              OR s.`shop_name` LIKE CONCAT('%', #{query.keyword}, '%')
+              OR COALESCE(s.`cuisine`, '') LIKE CONCAT('%', #{query.keyword}, '%')
+              OR c.`canteen_name` LIKE CONCAT('%', #{query.keyword}, '%')
+              OR COALESCE(c.`location`, '') LIKE CONCAT('%', #{query.keyword}, '%'))
+        </if>
     </sql>
 
     <resultMap id="dishViewMap" type="com.studyroom.dto.DishView">
@@ -171,7 +179,7 @@
         JOIN `shop` s ON s.`id` = d.`shop_id`
         JOIN `canteen` c ON c.`id` = s.`canteen_id`
         WHERE <include refid="dishSearchWhere"/>
-        ORDER BY d.`is_signature` DESC, d.`id` DESC
+        ORDER BY d.`is_signature` DESC, d.`rating` DESC, d.`id` DESC
         LIMIT #{size} OFFSET #{offset}
     </select>
 

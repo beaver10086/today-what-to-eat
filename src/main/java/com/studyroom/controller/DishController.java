@@ -34,6 +34,11 @@ public class DishController {
         return ApiResponse.success(dishService.search(query));
     }
 
+    @GetMapping("/random")
+    public ApiResponse<DishView> random(@Valid @org.springframework.web.bind.annotation.ModelAttribute DishQuery query) {
+        return ApiResponse.success(dishService.random(query));
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<DishView> get(@PathVariable @Min(1) Long id) {
         return ApiResponse.success(dishService.get(id));

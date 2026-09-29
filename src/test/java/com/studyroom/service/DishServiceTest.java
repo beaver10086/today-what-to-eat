@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -60,6 +61,35 @@ class DishServiceTest {
                 .isInstanceOf(BizException.class)
                 .hasMessage("最低价格不能高于最高价格");
         verify(dishMapper, never()).search(any(), eq(0L), eq(20));
+    }
+
+    @Test
+    void randomDishRespectsFiltersAndSelectsOneResult() {
+        DishQuery query = new DishQuery();
+        query.setCanteenId(3L);
+        query.setCategory(2);
+        var expected = new com.studyroom.dto.DishView(91L, 4L, "档口", 3L, "食堂", "随机菜",
+                new java.math.BigDecimal("12.00"), 2, 15, 0, 400, "菜品介绍", null, 0, 1,
+                new java.math.BigDecimal("4.5"));
+        when(dishMapper.countMatches(query)).thenReturn(3L);
+        when(dishMapper.search(eq(query), any(Long.class), eq(1))).thenReturn(List.of(expected));
+
+        var selected = dishService.random(query);
+
+        assertThat(selected).isEqualTo(expected);
+        assertThat(query.getSize()).isEqualTo(1);
+        verify(dishMapper, times(2)).search(eq(query), any(Long.class), eq(1));
+    }
+
+    @Test
+    void randomDishReportsWhenFiltersMatchNothing() {
+        DishQuery query = new DishQuery();
+        when(dishMapper.countMatches(query)).thenReturn(0L);
+        when(dishMapper.search(eq(query), eq(0L), eq(1))).thenReturn(List.of());
+
+        assertThatThrownBy(() -> dishService.random(query))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("没有可推荐");
     }
 
     @Test

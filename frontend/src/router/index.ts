@@ -17,6 +17,18 @@ const router = createRouter({
       meta: { title: '档口详情' },
     },
     {
+      path: '/canteens/:id',
+      name: 'canteen-detail',
+      component: () => import('../views/CanteenDetailView.vue'),
+      meta: { title: '食堂菜单' },
+    },
+    {
+      path: '/dishes/:id',
+      name: 'dish-detail',
+      component: () => import('../views/DishDetailView.vue'),
+      meta: { title: '菜品详情' },
+    },
+    {
       path: '/admin',
       name: 'admin',
       component: () => import('../views/AdminView.vue'),

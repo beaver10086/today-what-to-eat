@@ -22,6 +22,9 @@ services:
       DB_URL: jdbc:mysql://db:3306/what_to_eat?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       DB_USERNAME: root
       DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-test-only}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
     depends_on:
       db:
         condition: service_healthy

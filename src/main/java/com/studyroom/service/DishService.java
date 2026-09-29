@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +52,22 @@ public class DishService {
     @Transactional(readOnly = true)
     public DishView get(Long id) {
         return view(require(id));
+    }
+
+    @Transactional(readOnly = true)
+    public DishView random(DishQuery query) {
+        query.setPage(1);
+        query.setSize(1);
+        PageResult<DishView> matches = search(query);
+        if (matches.total() == 0) {
+            throw new BizException(404, "当前条件下没有可推荐的菜品");
+        }
+        long offset = ThreadLocalRandom.current().nextLong(matches.total());
+        List<DishView> selected = dishMapper.search(query, offset, 1);
+        if (selected.isEmpty()) {
+            throw new BizException(404, "当前条件下没有可推荐的菜品");
+        }
+        return selected.get(0);
     }
 
     @Transactional

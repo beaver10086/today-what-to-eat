@@ -140,7 +140,7 @@ onMounted(favorites.refresh)
           </div>
           <div class="recommendation-body">
             <div class="dish-title-row">
-              <h3>{{ item.dish.dishName }}</h3>
+              <h3><RouterLink :to="`/dishes/${item.dish.id}`">{{ item.dish.dishName }}</RouterLink></h3>
               <strong>¥{{ Number(item.dish.price).toFixed(2) }}</strong>
             </div>
             <p class="recommendation-location">

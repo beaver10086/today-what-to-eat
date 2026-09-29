@@ -2,8 +2,15 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { showToast } from 'vant'
 import { useRouter } from 'vue-router'
-import { listCanteens, listDishes, listShops, listTags } from '../api/data'
-import type { Canteen, Dish, DishFilters, Shop, Tag } from '../api/data'
+import {
+  getRandomDish,
+  listCanteens,
+  listDishes,
+  listShops,
+  listTags,
+  searchByNaturalLanguage,
+} from '../api/data'
+import type { Canteen, Dish, DishFilters, SearchIntent, Shop, Tag } from '../api/data'
 import { useAuthStore } from '../stores/auth'
 import { useFavorites } from '../composables/useFavorites'
 
@@ -16,7 +23,12 @@ const router = useRouter()
 const favorites = useFavorites(1, auth, router)
 const dishes = ref<Dish[]>([])
 const total = ref(0)
+const pickingRandom = ref(false)
 const state = ref<'loading' | 'ready' | 'empty' | 'error'>('loading')
+const naturalQuery = ref('')
+const naturalIntent = ref<SearchIntent | null>(null)
+const naturalNotice = ref('')
+const naturalLoading = ref(false)
 const filters = reactive({
   canteenId: '',
   shopId: '',
@@ -51,7 +63,11 @@ async function loadOptions() {
 }
 
 async function search(reset = true) {
-  if (reset) page.value = 1
+  if (reset) {
+    page.value = 1
+    naturalIntent.value = null
+    naturalNotice.value = ''
+  }
   state.value = 'loading'
   const params: DishFilters = { page: page.value, size }
   if (filters.canteenId) params.canteenId = Number(filters.canteenId)
@@ -73,7 +89,51 @@ async function search(reset = true) {
   }
 }
 
+async function searchNaturally(reset = true) {
+  if (!naturalQuery.value.trim()) return
+  if (reset) page.value = 1
+  naturalLoading.value = true
+  state.value = 'loading'
+  try {
+    const result = await searchByNaturalLanguage(naturalQuery.value.trim(), page.value)
+    naturalIntent.value = result.conditions
+    naturalNotice.value = result.notice
+    dishes.value = result.result.records
+    total.value = result.result.total
+    state.value = dishes.value.length ? 'ready' : 'empty'
+  } catch {
+    state.value = 'error'
+    naturalNotice.value = '自然语言筛选暂时不可用，请检查网络或重试。'
+  } finally {
+    naturalLoading.value = false
+  }
+}
+
+async function pickRandomDish() {
+  pickingRandom.value = true
+  try {
+    const params: DishFilters = {}
+    if (filters.canteenId) params.canteenId = Number(filters.canteenId)
+    if (filters.shopId) params.shopId = Number(filters.shopId)
+    if (filters.category) params.category = Number(filters.category)
+    if (filters.spiceLevel) params.spiceLevel = Number(filters.spiceLevel)
+    if (filters.mealType) params.mealType = Number(filters.mealType)
+    if (filters.tagId) params.tagId = Number(filters.tagId)
+    if (filters.minPrice) params.minPrice = Number(filters.minPrice)
+    if (filters.maxPrice) params.maxPrice = Number(filters.maxPrice)
+    const dish = await getRandomDish(params)
+    await router.push(`/dishes/${dish.id}`)
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '暂时没有符合条件的菜品')
+  } finally {
+    pickingRandom.value = false
+  }
+}
+
 function clearFilters() {
+  naturalQuery.value = ''
+  naturalIntent.value = null
+  naturalNotice.value = ''
   Object.assign(filters, {
     canteenId: '',
     shopId: '',
@@ -107,14 +167,14 @@ function mealLabel(mask: number) {
 function previousPage() {
   if (page.value > 1) {
     page.value -= 1
-    void search(false)
+    void (naturalIntent.value ? searchNaturally(false) : search(false))
   }
 }
 
 function nextPage() {
   if (page.value < Math.ceil(total.value / size)) {
     page.value += 1
-    void search(false)
+    void (naturalIntent.value ? searchNaturally(false) : search(false))
   }
 }
 
@@ -141,8 +201,116 @@ watch(() => auth.isLoggedIn, favorites.refresh, { immediate: true })
       </div>
     </header>
 
+    <nav class="discovery-nav" aria-label="菜品功能导航">
+      <span class="discovery-nav-label">快速查看</span>
+      <a href="#natural-search">一句话找菜</a>
+      <a href="#locations">按地点查看</a>
+      <a href="#filters">筛选菜品</a>
+      <a href="#menu">全部菜品</a>
+      <button type="button" @click="pickRandomDish">🎲 随机推荐</button>
+      <RouterLink class="discovery-favorites-link" to="/favorites">我的收藏</RouterLink>
+      <RouterLink v-if="auth.isAdmin" to="/admin">后台管理</RouterLink>
+    </nav>
+
+    <section
+      class="natural-search surface"
+      id="natural-search"
+      aria-label="自然语言找菜"
+    >
+      <div>
+        <span class="eyebrow">不用逐项筛选</span>
+        <h2>说说你现在想吃什么</h2>
+        <p>例如：20 块以内、不要辣、离宿舍近的。</p>
+      </div>
+      <form
+        class="natural-search-form"
+        @submit.prevent="searchNaturally()"
+      >
+        <input
+          v-model="naturalQuery"
+          aria-label="用一句话描述筛选条件"
+          maxlength="500"
+          placeholder="输入预算、口味、食堂或菜名…"
+        >
+        <button
+          class="button"
+          type="submit"
+          :disabled="naturalLoading"
+        >
+          {{ naturalLoading ? '正在理解…' : '帮我找菜' }}
+        </button>
+      </form>
+      <p
+        v-if="naturalNotice"
+        class="natural-notice"
+        aria-live="polite"
+      >
+        {{ naturalNotice }}
+      </p>
+      <div
+        v-if="naturalIntent"
+        class="intent-chips"
+        aria-label="识别到的条件"
+      >
+        <span
+          v-if="naturalIntent.budgetMax != null"
+          class="pill"
+        >预算 ≤ ¥{{ naturalIntent.budgetMax }}</span>
+        <span
+          v-if="naturalIntent.maxSpiceLevel != null"
+          class="pill"
+        >辣度 ≤ {{ ['不辣', '微辣', '中辣', '重辣'][naturalIntent.maxSpiceLevel] }}</span>
+        <span
+          v-if="naturalIntent.canteenKeyword"
+          class="pill"
+        >{{
+          naturalIntent.canteenKeyword
+        }}</span>
+        <span
+          v-if="naturalIntent.shopKeyword"
+          class="pill"
+        >{{ naturalIntent.shopKeyword }}</span>
+        <span
+          v-if="naturalIntent.mealType"
+          class="pill"
+        >{{
+          { 1: '早餐', 2: '午餐', 4: '晚餐', 8: '夜宵' }[naturalIntent.mealType]
+        }}</span>
+        <span
+          v-if="naturalIntent.keyword"
+          class="pill"
+        >关键词：{{ naturalIntent.keyword }}</span>
+        <span
+          v-if="naturalIntent.nearby"
+          class="pill"
+        >优先附近</span>
+      </div>
+    </section>
+
+    <section
+      v-if="canteens.length"
+      class="canteen-strip"
+      id="locations"
+      aria-label="按食堂浏览"
+    >
+      <div class="canteen-strip-heading">
+        <span class="eyebrow">按地点探索</span><span>食堂 · 门店 · 菜品</span>
+      </div>
+      <div class="canteen-strip-list">
+        <RouterLink
+          v-for="canteen in canteens"
+          :key="canteen.id"
+          :to="`/canteens/${canteen.id}`"
+          class="canteen-chip"
+        >
+          <span aria-hidden="true">🏫</span><span><strong>{{ canteen.canteenName }}</strong><small>{{ canteen.campus }}</small></span><span aria-hidden="true">→</span>
+        </RouterLink>
+      </div>
+    </section>
+
     <section
       class="filter-panel surface"
+      id="filters"
       aria-label="菜品筛选"
     >
       <div class="field">
@@ -301,11 +469,19 @@ watch(() => auth.isLoggedIn, favorites.refresh, { immediate: true })
         >
           重置
         </button>
+        <button
+          class="button random-dish-button"
+          :disabled="pickingRandom"
+          type="button"
+          @click="pickRandomDish"
+        >
+          {{ pickingRandom ? '正在挑选…' : '🎲 帮我随机挑一份' }}
+        </button>
       </div>
     </section>
 
     <div class="result-line">
-      <span>今日菜单</span><span>共 {{ total }} 道</span>
+      <span id="menu">全部菜品 · 今日菜单</span><span>共 {{ total }} 道</span>
     </div>
     <div
       v-if="state === 'loading'"
@@ -368,7 +544,11 @@ watch(() => auth.isLoggedIn, favorites.refresh, { immediate: true })
         </div>
         <div class="dish-body">
           <div class="dish-topline">
-            <h2>{{ dish.dishName }}</h2>
+            <h2>
+              <RouterLink :to="`/dishes/${dish.id}`">
+                {{ dish.dishName }}
+              </RouterLink>
+            </h2>
             <div class="dish-card-actions">
               <span class="price">¥{{ Number(dish.price).toFixed(2) }}</span>
               <button
@@ -392,9 +572,18 @@ watch(() => auth.isLoggedIn, favorites.refresh, { immediate: true })
               class="pill"
             >招牌</span>
           </div>
+          <p
+            v-if="dish.description"
+            class="dish-description"
+          >
+            {{ dish.description }}
+          </p>
           <div class="dish-location">
             <RouterLink :to="`/shops/${dish.shopId}`">
-              {{ dish.shopName }} · {{ dish.canteenName }}
+              {{ dish.shopName }}
+            </RouterLink>
+            <RouterLink :to="`/canteens/${dish.canteenId}`">
+              {{ dish.canteenName }}
             </RouterLink>
             <span>{{ mealLabel(dish.mealType) }}</span>
           </div>

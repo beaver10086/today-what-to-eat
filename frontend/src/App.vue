@@ -4,6 +4,7 @@ import { onBeforeUnmount, onMounted } from 'vue'
 import { showToast } from 'vant'
 import { useAuthStore } from './stores/auth'
 import { logout } from './api/user'
+import AssistantDock from './components/AssistantDock.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -101,6 +102,7 @@ async function signOut() {
       </div>
     </header>
     <RouterView />
+    <AssistantDock />
     <footer class="site-footer">
       用一顿好饭，照顾今天的自己。
     </footer>

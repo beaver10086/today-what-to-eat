@@ -24,8 +24,14 @@ async function load() {
     const id = Number(route.params.id)
     shop.value = await getShop(id)
     canteen.value = await getCanteen(shop.value.canteenId)
-    const menu = await listDishes({ shopId: id, size: 100 })
-    dishes.value = menu.records
+    const firstPage = await listDishes({ shopId: id, size: 100 })
+    const pageCount = Math.ceil(firstPage.total / firstPage.size)
+    const remainingPages = await Promise.all(
+      Array.from({ length: Math.max(0, pageCount - 1) }, (_, index) =>
+        listDishes({ shopId: id, page: index + 2, size: firstPage.size }),
+      ),
+    )
+    dishes.value = [...firstPage.records, ...remainingPages.flatMap((page) => page.records)]
   } catch (reason) {
     error.value = reason instanceof Error ? reason.message : '档口信息暂时无法加载'
   } finally {
@@ -35,10 +41,14 @@ async function load() {
 
 onMounted(load)
 watch(() => route.params.id, load)
-watch(() => auth.isLoggedIn, () => {
-  void shopFavorites.refresh()
-  void dishFavorites.refresh()
-}, { immediate: true })
+watch(
+  () => auth.isLoggedIn,
+  () => {
+    void shopFavorites.refresh()
+    void dishFavorites.refresh()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -78,7 +88,13 @@ watch(() => auth.isLoggedIn, () => {
           🍳
         </div>
         <div>
-          <span class="eyebrow">{{ canteen?.campus }} · {{ canteen?.canteenName }}</span>
+          <RouterLink
+            v-if="canteen"
+            class="eyebrow canteen-breadcrumb"
+            :to="`/canteens/${canteen.id}`"
+          >
+            {{ canteen.campus }} · {{ canteen.canteenName }} · 查看食堂
+          </RouterLink>
           <h1>{{ shop.shopName }}</h1>
           <button
             class="button secondary small shop-favorite-button"
@@ -123,7 +139,11 @@ watch(() => auth.isLoggedIn, () => {
           </div>
           <div class="dish-body">
             <div class="dish-topline">
-              <h2>{{ dish.dishName }}</h2>
+              <h2>
+                <RouterLink :to="`/dishes/${dish.id}`">
+                  {{ dish.dishName }}
+                </RouterLink>
+              </h2>
               <div class="dish-card-actions">
                 <span class="price">¥{{ Number(dish.price).toFixed(2) }}</span>
                 <button

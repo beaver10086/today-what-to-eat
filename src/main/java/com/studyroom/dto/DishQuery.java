@@ -39,6 +39,8 @@ public class DishQuery {
     @Min(0)
     private BigDecimal maxPrice;
 
+    private String keyword;
+
     public int getPage() { return page; }
     public void setPage(int page) { this.page = page; }
     public int getSize() { return size; }
@@ -59,4 +61,6 @@ public class DishQuery {
     public void setMinPrice(BigDecimal minPrice) { this.minPrice = minPrice; }
     public BigDecimal getMaxPrice() { return maxPrice; }
     public void setMaxPrice(BigDecimal maxPrice) { this.maxPrice = maxPrice; }
+    public String getKeyword() { return keyword; }
+    public void setKeyword(String keyword) { this.keyword = keyword; }
 }
