@@ -17,7 +17,10 @@ request.interceptors.response.use(
     if (typeof body?.code === 'number' && body.code !== 0) {
       return Promise.reject(new Error(body.message || '请求失败'))
     }
-    return body && 'data' in body ? { ...response, data: body.data } : response
+    if (body && typeof body === 'object' && 'code' in body && 'data' in body) {
+      return body.data as never
+    }
+    return response
   },
   (error: unknown) => {
     if (axios.isAxiosError(error)) {
