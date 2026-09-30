@@ -2,6 +2,7 @@ package com.studyroom.controller;
 
 import com.studyroom.common.ApiResponse;
 import com.studyroom.common.AuditAction;
+import com.studyroom.common.AuthUser;
 import com.studyroom.common.PageResult;
 import com.studyroom.dto.DishQuery;
 import com.studyroom.dto.DishRequest;
@@ -9,8 +10,11 @@ import com.studyroom.dto.DishView;
 import com.studyroom.service.DishService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +24,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 @Validated
 @RestController
@@ -39,9 +45,23 @@ public class DishController {
         return ApiResponse.success(dishService.random(query));
     }
 
+    @GetMapping("/admin")
+    public ApiResponse<PageResult<DishView>> adminPage(
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "100") @Min(1) @Max(100) int size) {
+        return ApiResponse.success(dishService.adminPage(page, size));
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<DishView> get(@PathVariable @Min(1) Long id) {
         return ApiResponse.success(dishService.get(id));
+    }
+
+    @PostMapping(value = "/import", consumes = "multipart/form-data")
+    public ApiResponse<DishService.ImportResult> importCsv(@RequestParam("file") MultipartFile file,
+                                                            HttpServletRequest request) throws IOException {
+        AuthUser user = (AuthUser) request.getAttribute(AuthUser.REQUEST_ATTRIBUTE);
+        return ApiResponse.success(dishService.importCsv(file.getBytes(), user.id(), request.getRemoteAddr()));
     }
 
     @PostMapping

@@ -16,4 +16,7 @@ public interface DishMapper extends BaseMapper<Dish> {
     long countMatches(@Param("query") DishQuery query);
 
     long countByShopId(@Param("shopId") Long shopId);
+
+    Long findActiveIdByShopAndName(@Param("shopId") Long shopId,
+                                    @Param("dishName") String dishName);
 }

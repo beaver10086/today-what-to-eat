@@ -102,6 +102,9 @@ watch(() => auth.isLoggedIn, favorite.refresh, { immediate: true })
           </p>
           <div class="dish-meta">
             <span class="pill">{{ categoryNames[dish.category - 1] }}</span>
+            <span v-if="dish.takeoutSuitability != null" class="pill">
+              {{ ['不适合打包', '打包一般', '适合打包'][dish.takeoutSuitability] }}
+            </span>
             <span class="pill">{{
               ['不辣', '微辣', '中辣', '重辣'][dish.spiceLevel] || '不辣'
             }}</span>
@@ -119,6 +122,7 @@ watch(() => auth.isLoggedIn, favorite.refresh, { immediate: true })
               class="pill"
             >{{ tag.tagName }}</span>
           </div>
+          <p v-if="dish.dataSource" class="muted-copy">菜单来源：{{ dish.dataSource }}</p>
           <div class="detail-actions">
             <button
               class="button"

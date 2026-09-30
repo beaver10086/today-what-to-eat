@@ -79,7 +79,7 @@ class ShopServiceTest {
 
     private static ShopRequest request(Integer sortOrder, Integer status) {
         return new ShopRequest(1L, " 面食档 ", "一层", null, null, "面食",
-                new BigDecimal("15.00"), null, null, status, sortOrder);
+                new BigDecimal("15.00"), null, null, null, status, sortOrder);
     }
 
     private static Shop shop(Long id) {

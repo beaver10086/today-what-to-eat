@@ -33,7 +33,8 @@ public class AuthInterceptor implements HandlerInterceptor {
         boolean managementWrite = isWrite(request.getMethod())
                 && (path.startsWith("/api/canteens") || path.startsWith("/api/shops")
                 || path.startsWith("/api/dishes") || path.startsWith("/api/tags"));
-        if (!userRoute && !managementWrite) {
+        boolean adminRead = path.equals("/api/dishes/admin");
+        if (!userRoute && !managementWrite && !adminRead) {
             return true;
         }
         String authorization = request.getHeader("Authorization");
@@ -43,7 +44,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             writeFailure(response, HttpServletResponse.SC_UNAUTHORIZED, 401, "请先登录或登录已失效");
             return false;
         }
-        if (managementWrite && !user.isAdmin()) {
+        if ((managementWrite || adminRead) && !user.isAdmin()) {
             writeFailure(response, HttpServletResponse.SC_FORBIDDEN, 403, "仅管理员可维护数据");
             return false;
         }

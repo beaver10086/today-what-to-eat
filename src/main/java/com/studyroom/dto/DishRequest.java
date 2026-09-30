@@ -15,6 +15,8 @@ public record DishRequest(
         @NotNull @Min(1) @Max(7) Integer category,
         @Min(1) @Max(15) Integer mealType,
         @Min(0) @Max(3) Integer spiceLevel,
+        @Min(0) @Max(2) Integer takeoutSuitability,
+        @Size(max = 100) String dataSource,
         @Min(0) Integer calorie,
         @Size(max = 300) String description,
         @Size(max = 255) String imageUrl,

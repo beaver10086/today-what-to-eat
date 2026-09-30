@@ -9,7 +9,7 @@ import {
   deleteDish,
   deleteShop,
   listCanteens,
-  listDishes,
+  listAdminDishes,
   listShops,
   listTags,
   setDishTags,
@@ -19,6 +19,7 @@ import {
   createTag,
   deleteTag,
   getDishTags,
+  importDishesCsv,
   updateTag,
 } from '../api/data'
 import type { Canteen, Dish, Shop, Tag } from '../api/data'
@@ -45,6 +46,8 @@ const shops = ref<Shop[]>([])
 const dishes = ref<Dish[]>([])
 const tags = ref<Tag[]>([])
 const loading = ref(false)
+const importing = ref(false)
+const csvInput = ref<globalThis.HTMLInputElement | null>(null)
 const editorOpen = ref(false)
 const editingId = ref<number | null>(null)
 const selectedTags = ref<number[]>([])
@@ -89,12 +92,20 @@ async function loadAll() {
     const [canteenPage, shopPage, dishPage, tagPage] = await Promise.all([
       listCanteens(),
       listShops(),
-      listDishes({ size: 100 }),
+      listAdminDishes(1),
       listTags(),
     ])
     canteens.value = canteenPage.records
     shops.value = shopPage.records
-    dishes.value = dishPage.records
+    const remainingDishPages = await Promise.all(
+      Array.from({ length: Math.max(0, Math.ceil(dishPage.total / 100) - 1) }, (_, index) =>
+        listAdminDishes(index + 2),
+      ),
+    )
+    dishes.value = [
+      ...dishPage.records,
+      ...remainingDishPages.flatMap((page) => page.records),
+    ]
     tags.value = tagPage.records
   } catch (error) {
     showToast(error instanceof Error ? error.message : '数据加载失败')
@@ -133,6 +144,7 @@ function openCreate() {
       openTime: '',
       closeTime: '',
       avgPrice: '',
+      queueHeat: '',
       coverUrl: '',
       description: '',
       sortOrder: 0,
@@ -146,6 +158,8 @@ function openCreate() {
       category: 1,
       mealType: 15,
       spiceLevel: 0,
+      takeoutSuitability: '',
+      dataSource: '',
       calorie: '',
       description: '',
       imageUrl: '',
@@ -195,6 +209,7 @@ async function save() {
         openTime: form.openTime ? String(form.openTime) : null,
         closeTime: form.closeTime ? String(form.closeTime) : null,
         avgPrice: form.avgPrice === '' ? null : Number(form.avgPrice),
+        queueHeat: form.queueHeat === '' || form.queueHeat == null ? null : Number(form.queueHeat),
         coverUrl: String(form.coverUrl || ''),
         description: String(form.description || ''),
         sortOrder: Number(form.sortOrder || 0),
@@ -211,6 +226,11 @@ async function save() {
         category: Number(form.category),
         mealType: Number(form.mealType),
         spiceLevel: Number(form.spiceLevel),
+        takeoutSuitability:
+          form.takeoutSuitability === '' || form.takeoutSuitability == null
+            ? null
+            : Number(form.takeoutSuitability),
+        dataSource: String(form.dataSource || '').trim(),
         calorie: form.calorie === '' ? null : Number(form.calorie),
         description: String(form.description || ''),
         imageUrl: String(form.imageUrl || ''),
@@ -258,6 +278,35 @@ async function remove(row: Row) {
   }
 }
 
+async function importCsv(event: globalThis.Event) {
+  const input = event.target as globalThis.HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  importing.value = true
+  try {
+    const result = await importDishesCsv(file)
+    showToast(`成功导入 ${result.imported} 道菜品`)
+    await loadAll()
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '导入失败')
+  } finally {
+    input.value = ''
+    importing.value = false
+  }
+}
+
+function downloadCsvTemplate() {
+  const header =
+    'shopId,dishName,price,category,mealType,spiceLevel,takeoutSuitability,dataSource,calorie,description,imageUrl,isAvailable\n'
+  const link = globalThis.document.createElement('a')
+  link.href = globalThis.URL.createObjectURL(
+    new globalThis.Blob(['\uFEFF', header], { type: 'text/csv;charset=utf-8' }),
+  )
+  link.download = '菜品导入模板.csv'
+  link.click()
+  globalThis.URL.revokeObjectURL(link.href)
+}
+
 onMounted(loadAll)
 </script>
 
@@ -287,7 +336,26 @@ onMounted(loadAll)
       style="padding: 18px"
     >
       <div class="admin-toolbar">
-        <span class="muted-copy">{{ rows.length }} 条记录</span><button
+        <span class="muted-copy">{{ rows.length }} 条记录</span>
+        <button
+          v-if="activeKind === 'dish'"
+          class="button secondary small"
+          type="button"
+          :disabled="importing"
+          @click="csvInput?.click()"
+        >
+          {{ importing ? '正在导入…' : '导入菜品 CSV' }}
+        </button>
+        <input ref="csvInput" type="file" accept=".csv,text/csv" hidden @change="importCsv">
+        <button
+          v-if="activeKind === 'dish'"
+          class="button secondary small"
+          type="button"
+          @click="downloadCsvTemplate"
+        >
+          下载 CSV 模板
+        </button>
+        <button
           class="button small"
           type="button"
           @click="openCreate"
@@ -466,6 +534,15 @@ onMounted(loadAll)
               </div>
             </div>
             <div class="field">
+              <label>排队热度</label><select v-model="form.queueHeat">
+                <option value="">未核实</option>
+                <option :value="0">无需排队</option>
+                <option :value="1">较短</option>
+                <option :value="2">较长</option>
+                <option :value="3">很长</option>
+              </select>
+            </div>
+            <div class="field">
               <label>档口简介</label><input v-model="form.description">
             </div>
             <div class="field">
@@ -584,6 +661,19 @@ onMounted(loadAll)
                     招牌菜
                   </option>
                 </select>
+              </div>
+            </div>
+            <div class="survey-grid">
+              <div class="field">
+                <label>打包适配度</label><select v-model="form.takeoutSuitability">
+                  <option value="">未核实</option>
+                  <option :value="0">不适合</option>
+                  <option :value="1">一般</option>
+                  <option :value="2">适合</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>信息来源</label><input v-model="form.dataSource" maxlength="100">
               </div>
             </div>
             <div class="survey-grid">

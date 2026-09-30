@@ -92,6 +92,6 @@ class RecommendationServiceTest {
     private static DishView dish(Long id, String name, String rating) {
         return new DishView(id, 2L, "一号档口", 3L, "东区食堂", name,
                 new BigDecimal("12.00"), 2, 2, 0, 500, "", null, 0, 1,
-                new BigDecimal(rating));
+                new BigDecimal(rating), null, null);
     }
 }

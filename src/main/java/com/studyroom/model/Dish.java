@@ -11,6 +11,8 @@ public class Dish {
     private Integer category;
     private Integer mealType;
     private Integer spiceLevel;
+    private Integer takeoutSuitability;
+    private String dataSource;
     private Integer calorie;
     private String description;
     private String imageUrl;
@@ -40,6 +42,10 @@ public class Dish {
     public void setMealType(Integer mealType) { this.mealType = mealType; }
     public Integer getSpiceLevel() { return spiceLevel; }
     public void setSpiceLevel(Integer spiceLevel) { this.spiceLevel = spiceLevel; }
+    public Integer getTakeoutSuitability() { return takeoutSuitability; }
+    public void setTakeoutSuitability(Integer takeoutSuitability) { this.takeoutSuitability = takeoutSuitability; }
+    public String getDataSource() { return dataSource; }
+    public void setDataSource(String dataSource) { this.dataSource = dataSource; }
     public Integer getCalorie() { return calorie; }
     public void setCalorie(Integer calorie) { this.calorie = calorie; }
     public String getDescription() { return description; }

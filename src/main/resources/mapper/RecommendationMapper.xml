@@ -100,6 +100,8 @@
             <arg column="isSignature" javaType="java.lang.Integer"/>
             <arg column="isAvailable" javaType="java.lang.Integer"/>
             <arg column="rating" javaType="java.math.BigDecimal"/>
+            <arg column="takeoutSuitability" javaType="java.lang.Integer"/>
+            <arg column="dataSource" javaType="java.lang.String"/>
         </constructor>
     </resultMap>
     <select id="selectCandidates" resultMap="candidateDishMap">
@@ -108,7 +110,8 @@
                d.`dish_name` AS `dishName`, d.`price`, d.`category`,
                d.`meal_type` AS `mealType`, d.`spice_level` AS `spiceLevel`, d.`calorie`,
                d.`description`, d.`image_url` AS `imageUrl`,
-               d.`is_signature` AS `isSignature`, d.`is_available` AS `isAvailable`, d.`rating`
+               d.`is_signature` AS `isSignature`, d.`is_available` AS `isAvailable`, d.`rating`,
+               d.`takeout_suitability` AS `takeoutSuitability`, d.`data_source` AS `dataSource`
         FROM `dish` d JOIN `shop` s ON s.`id` = d.`shop_id`
         JOIN `canteen` c ON c.`id` = s.`canteen_id`
         WHERE d.`is_deleted` = 0 AND d.`is_available` = 1

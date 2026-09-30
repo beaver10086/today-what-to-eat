@@ -8,11 +8,25 @@
 - 前端：Vue 3、TypeScript、Vant、Vue Router、Pinia、Vite
 - CI：GitHub Actions
 
+## v1.1 菜单数据维护
+
+- 档口可维护排队热度（无需排队、较短、较长、很长），菜品可维护打包适配度（不适合、一般、适合）和信息来源；未核实的值可留空。档口与菜品详情页会展示已填写的信息。
+- 管理员后台的菜品列表包含已下架菜品，可继续编辑或上架。新增“下载 CSV 模板”和“导入菜品 CSV”；导入仅新增菜品，不修改或删除现有记录，并记录导入操作。
+- 导入前校验整份 UTF-8 CSV：检查档口、价格、字段范围及重复菜品。任一行有误则整批不写入，并返回行号；单次最多 500 道菜、512 KB，支持带引号的逗号和换行。先在后台创建档口，再按以下表头填写。必填列为 `shopId`、`dishName`、`price`、`category` 和 `dataSource`；`category` 为 1–7，`mealType` 为 1–15 的餐段位掩码，`spiceLevel` 为 0–3，`takeoutSuitability` 为 0–2，`isAvailable` 为 0 下架或 1 上架。
+- 再次保存口味问卷时，保留此前由反馈形成的口味权重调整。
+
+```csv
+shopId,dishName,price,category,mealType,spiceLevel,takeoutSuitability,dataSource,calorie,description,imageUrl,isAvailable
+910001,番茄炒蛋盖饭,12.50,1,2,0,2,实地核对,450,午餐示例,,1
+```
+
+升级已有数据库需执行一次 `docs/sql/V1.0.3__menu_metadata.sql`。v1.1 提供真实菜单的维护与导入入口，仓库中的演示菜单仍是虚构数据，真实菜单需要核对后自行导入。
+
 ## 本地启动
 
 ### 后端
 
-需要 JDK 17+、Maven 3.8+、MySQL 8。首次建库后依次执行 `docs/sql/V1.0.0__init.sql` 和 `docs/sql/V1.0.1__seed.sql`，然后在 `what-to-eat` 目录运行：
+需要 JDK 17+、Maven 3.8+、MySQL 8。首次建库后执行 `docs/sql/V1.0.0__init.sql`；需要演示数据时再执行 `docs/sql/V1.0.1__seed.sql` 和 `docs/sql/V1.0.2__accounts.sql`。已有数据库只需执行一次增量脚本 `docs/sql/V1.0.3__menu_metadata.sql`；新库在建表后、启动应用前也需执行它。然后在 `what-to-eat` 目录运行：
 
 ```bash
 mvn spring-boot:run

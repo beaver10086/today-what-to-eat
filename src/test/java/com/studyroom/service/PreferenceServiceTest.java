@@ -99,6 +99,24 @@ class PreferenceServiceTest {
     }
 
     @Test
+    void savingQuestionnaireKeepsFeedbackLearnedWeight() {
+        Preference previous = preference(7L);
+        previous.setLikeTagIds("[10]");
+        UserTasteProfile learned = profile(10L, 0);
+        learned.setId(100L);
+        learned.setWeight(new BigDecimal("6.00"));
+        learned.setSource(2);
+        when(preferenceMapper.selectByUserId(7L)).thenReturn(previous);
+        when(profileMapper.selectAllByUserId(7L)).thenReturn(List.of(learned));
+
+        service.save(7L, request(0, null, null, 2));
+
+        assertThat(learned.getWeight()).isEqualByComparingTo("6.00");
+        assertThat(learned.getSource()).isEqualTo(2);
+        verify(profileMapper).update(learned);
+    }
+
+    @Test
     void reportsMissingQuestionnaireAndMalformedJson() {
         when(preferenceMapper.selectByUserId(7L)).thenReturn(null, preference(7L));
 

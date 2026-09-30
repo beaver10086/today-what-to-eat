@@ -12,6 +12,7 @@ public class Shop {
     private java.time.LocalTime closeTime;
     private String cuisine;
     private java.math.BigDecimal avgPrice;
+    private Integer queueHeat;
     private java.math.BigDecimal rating;
     private Integer ratingCount;
     private String coverUrl;
@@ -38,6 +39,8 @@ public class Shop {
     public void setCuisine(String cuisine) { this.cuisine = cuisine; }
     public java.math.BigDecimal getAvgPrice() { return avgPrice; }
     public void setAvgPrice(java.math.BigDecimal avgPrice) { this.avgPrice = avgPrice; }
+    public Integer getQueueHeat() { return queueHeat; }
+    public void setQueueHeat(Integer queueHeat) { this.queueHeat = queueHeat; }
     public java.math.BigDecimal getRating() { return rating; }
     public void setRating(java.math.BigDecimal rating) { this.rating = rating; }
     public Integer getRatingCount() { return ratingCount; }

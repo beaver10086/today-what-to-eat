@@ -17,6 +17,7 @@ public record ShopRequest(
         LocalTime closeTime,
         @Size(max = 30) String cuisine,
         @DecimalMin("0.00") BigDecimal avgPrice,
+        @Min(0) @Max(3) Integer queueHeat,
         @Size(max = 255) String coverUrl,
         @Size(max = 500) String description,
         @Min(0) @Max(1) Integer status,

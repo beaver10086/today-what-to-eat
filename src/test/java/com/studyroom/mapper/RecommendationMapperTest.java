@@ -26,15 +26,16 @@ class RecommendationMapperTest {
                 + " shop_name VARCHAR(50), status TINYINT, is_deleted TINYINT)");
         jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS dish (id BIGINT PRIMARY KEY, shop_id BIGINT,"
                 + " dish_name VARCHAR(60), price DECIMAL(8,2), category TINYINT, meal_type TINYINT,"
-                + " spice_level TINYINT, calorie INT, description VARCHAR(200), image_url VARCHAR(255),"
+                + " spice_level TINYINT, takeout_suitability TINYINT, data_source VARCHAR(100),"
+                + " calorie INT, description VARCHAR(200), image_url VARCHAR(255),"
                 + " is_signature TINYINT, is_available TINYINT, rating DECIMAL(2,1), is_deleted TINYINT)");
         jdbcTemplate.update("INSERT INTO canteen VALUES (1, '东区食堂', 1, 0)");
         jdbcTemplate.update("INSERT INTO shop VALUES (2, 1, '一号档口', 1, 0)");
-        jdbcTemplate.update("INSERT INTO dish VALUES (101, 2, '适配晚餐', 12.00, 2, 4, 1, 500,"
+        jdbcTemplate.update("INSERT INTO dish VALUES (101, 2, '适配晚餐', 12.00, 2, 4, 1, NULL, NULL, 500,"
                 + " '测试菜品', NULL, 0, 1, 4.5, 0)");
-        jdbcTemplate.update("INSERT INTO dish VALUES (102, 2, '辣度超标', 12.00, 2, 4, 3, 500,"
+        jdbcTemplate.update("INSERT INTO dish VALUES (102, 2, '辣度超标', 12.00, 2, 4, 3, NULL, NULL, 500,"
                 + " '测试菜品', NULL, 0, 1, 4.8, 0)");
-        jdbcTemplate.update("INSERT INTO dish VALUES (103, 2, '早餐菜', 12.00, 2, 1, 0, 400,"
+        jdbcTemplate.update("INSERT INTO dish VALUES (103, 2, '早餐菜', 12.00, 2, 1, 0, NULL, NULL, 400,"
                 + " '测试菜品', NULL, 0, 1, 4.9, 0)");
     }
 

@@ -64,6 +64,8 @@ public class PreferenceService {
 
         Preference preference = preferenceMapper.selectByUserId(userId);
         boolean create = preference == null;
+        Set<Long> previousLikes = create ? Set.of() : new LinkedHashSet<>(fromJson(preference.getLikeTagIds()));
+        Set<Long> previousDislikes = create ? Set.of() : new LinkedHashSet<>(fromJson(preference.getDislikeTagIds()));
         if (create) {
             preference = new Preference();
             preference.setUserId(userId);
@@ -81,7 +83,7 @@ public class PreferenceService {
         } else {
             preferenceMapper.update(preference);
         }
-        refreshProfile(userId, likes, dislikes);
+        refreshProfile(userId, previousLikes, previousDislikes, likes, dislikes);
         return view(preference);
     }
 
@@ -96,33 +98,54 @@ public class PreferenceService {
         return views;
     }
 
-    private void refreshProfile(Long userId, Set<Long> likes, Set<Long> dislikes) {
+    private void refreshProfile(Long userId, Set<Long> previousLikes, Set<Long> previousDislikes,
+                                Set<Long> likes, Set<Long> dislikes) {
         List<UserTasteProfile> existing = profileMapper.selectAllByUserId(userId);
         Map<Long, UserTasteProfile> byTag = new LinkedHashMap<>();
         for (UserTasteProfile row : existing) {
             byTag.put(row.getTagId(), row);
-            if (!likes.contains(row.getTagId()) && !dislikes.contains(row.getTagId())
-                    && row.getIsDeleted() == 0) {
-                profileMapper.setDeleted(row.getId(), 1);
-            }
         }
-        for (Long tagId : union(likes, dislikes)) {
-            BigDecimal weight = likes.contains(tagId) ? new BigDecimal("5.00") : new BigDecimal("-10.00");
+        Set<Long> allTags = union(likes, dislikes);
+        allTags.addAll(byTag.keySet());
+        for (Long tagId : allTags) {
             UserTasteProfile row = byTag.get(tagId);
+            BigDecimal questionnaire = baseWeight(tagId, likes, dislikes);
+            BigDecimal learned = row != null && row.getIsDeleted() == 0
+                    && Integer.valueOf(2).equals(row.getSource())
+                    ? row.getWeight().subtract(baseWeight(tagId, previousLikes, previousDislikes))
+                    : BigDecimal.ZERO;
+            BigDecimal weight = questionnaire.add(learned)
+                    .max(new BigDecimal("-10.00")).min(new BigDecimal("10.00"));
+            if (weight.signum() == 0) {
+                if (row != null && row.getIsDeleted() == 0) {
+                    profileMapper.setDeleted(row.getId(), 1);
+                }
+                continue;
+            }
             if (row == null) {
                 row = new UserTasteProfile();
                 row.setUserId(userId);
                 row.setTagId(tagId);
                 row.setWeight(weight);
-                row.setSource(1);
+                row.setSource(learned.signum() == 0 ? 1 : 2);
                 profileMapper.insert(row);
             } else {
+                if (row.getIsDeleted() != null && row.getIsDeleted() == 1) {
+                    profileMapper.setDeleted(row.getId(), 0);
+                }
                 row.setWeight(weight);
-                row.setSource(1);
+                row.setSource(learned.signum() == 0 ? 1 : 2);
                 row.setIsDeleted(0);
                 profileMapper.update(row);
             }
         }
+    }
+
+    private static BigDecimal baseWeight(Long tagId, Set<Long> likes, Set<Long> dislikes) {
+        if (likes.contains(tagId)) {
+            return new BigDecimal("5.00");
+        }
+        return dislikes.contains(tagId) ? new BigDecimal("-10.00") : BigDecimal.ZERO;
     }
 
     private String summary(PreferenceRequest request, Set<Long> likes, Set<Long> dislikes,

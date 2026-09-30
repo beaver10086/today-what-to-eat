@@ -77,6 +77,7 @@ public class ShopService {
         shop.setCloseTime(request.closeTime());
         shop.setCuisine(request.cuisine());
         shop.setAvgPrice(request.avgPrice());
+        shop.setQueueHeat(request.queueHeat());
         shop.setCoverUrl(request.coverUrl());
         shop.setDescription(request.description());
         shop.setStatus(request.status() == null ? 1 : request.status());
@@ -86,7 +87,8 @@ public class ShopService {
     private static ShopView view(Shop shop) {
         return new ShopView(shop.getId(), shop.getCanteenId(), shop.getShopName(), shop.getLocationDesc(),
                 shop.getOpenTime(), shop.getCloseTime(), shop.getCuisine(), shop.getAvgPrice(),
-                shop.getCoverUrl(), shop.getDescription(), shop.getStatus(), shop.getSortOrder());
+                shop.getCoverUrl(), shop.getDescription(), shop.getStatus(), shop.getSortOrder(),
+                shop.getQueueHeat());
     }
 
     private static void validatePage(int page, int size) {

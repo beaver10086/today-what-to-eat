@@ -150,6 +150,7 @@ class RecommendationServiceFlowTest {
 
     private static com.studyroom.dto.DishView dish(Long id) {
         return new com.studyroom.dto.DishView(id, 2L, "档口", 3L, "食堂", "菜" + id,
-                new BigDecimal("10.00"), 2, 2, 0, 300, null, null, 0, 1, new BigDecimal("4.0"));
+                new BigDecimal("10.00"), 2, 2, 0, 300, null, null, 0, 1,
+                new BigDecimal("4.0"), null, null);
     }
 }

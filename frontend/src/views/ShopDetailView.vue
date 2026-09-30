@@ -108,6 +108,9 @@ watch(
           </button>
           <p>{{ shop.description || shop.cuisine || '校内食堂档口' }}</p>
           <div class="dish-meta">
+            <span v-if="shop.queueHeat != null" class="pill">
+              排队：{{ ['无需排队', '较短', '较长', '很长'][shop.queueHeat] }}
+            </span>
             <span
               v-if="shop.locationDesc"
               class="pill"

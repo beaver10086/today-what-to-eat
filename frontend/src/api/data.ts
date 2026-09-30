@@ -26,6 +26,7 @@ export interface Shop {
   locationDesc?: string | null
   cuisine?: string | null
   avgPrice?: number | null
+  queueHeat?: number | null
   status: number
   description?: string | null
   openTime?: string | null
@@ -51,6 +52,8 @@ export interface Dish {
   isAvailable: number
   rating: number
   calorie?: number | null
+  takeoutSuitability?: number | null
+  dataSource?: string | null
 }
 
 export interface Tag {
@@ -100,14 +103,26 @@ export interface AssistantAnswer {
 
 export const listDishes = (params: DishFilters) =>
   request.get<never, PageResult<Dish>>('/dishes', { params })
+export const listAdminDishes = (page: number) =>
+  request.get<never, PageResult<Dish>>('/dishes/admin', { params: { page, size: 100 } })
 export const getRandomDish = (params: DishFilters) =>
   request.get<never, Dish>('/dishes/random', { params })
 export const getDish = (id: number) => request.get<never, Dish>(`/dishes/${id}`)
 export const listCanteens = () =>
   request.get<never, PageResult<Canteen>>('/canteens', { params: { size: 100 } })
 export const getCanteen = (id: number) => request.get<never, Canteen>(`/canteens/${id}`)
-export const listShops = (canteenId?: number) =>
-  request.get<never, PageResult<Shop>>('/shops', { params: { size: 100, canteenId } })
+export const listShops = async (canteenId?: number) => {
+  const first = await request.get<never, PageResult<Shop>>('/shops', { params: { page: 1, size: 100 } })
+  // ponytail: keep campus-scale shop options in memory; paginate the picker if this grows much larger.
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, Math.ceil(first.total / 100) - 1) }, (_, index) =>
+      request.get<never, PageResult<Shop>>('/shops', { params: { page: index + 2, size: 100 } }),
+    ),
+  )
+  const all = [...first.records, ...rest.flatMap((page) => page.records)]
+  const records = canteenId ? all.filter((shop) => shop.canteenId === canteenId) : all
+  return { ...first, records, total: records.length }
+}
 export const getShop = (id: number) => request.get<never, Shop>(`/shops/${id}`)
 export const listTags = () =>
   request.get<never, PageResult<Tag>>('/tags', { params: { size: 100 } })
@@ -127,6 +142,11 @@ export const createDish = (body: Partial<Dish>) =>
   request.post<never, Dish, Partial<Dish>>('/dishes', body)
 export const updateDish = (id: number, body: Partial<Dish>) => request.put(`/dishes/${id}`, body)
 export const deleteDish = (id: number) => request.delete(`/dishes/${id}`)
+export const importDishesCsv = (file: File) => {
+  const body = new FormData()
+  body.append('file', file)
+  return request.post<never, { imported: number }>('/dishes/import', body)
+}
 export const getDishTags = (id: number) => request.get<never, number[]>(`/dishes/${id}/tags`)
 export const setDishTags = (id: number, tagIds: number[]) =>
   request.put(`/dishes/${id}/tags`, tagIds)

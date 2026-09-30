@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.slf4j.Logger;
@@ -32,6 +33,11 @@ public class GlobalExceptionHandler {
             HttpMessageNotReadableException.class})
     public ResponseEntity<ApiResponse<Void>> handleValidationException(Exception exception) {
         return ResponseEntity.badRequest().body(ApiResponse.failure(400, "请求参数不合法"));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOversizedUpload(MaxUploadSizeExceededException exception) {
+        return ResponseEntity.badRequest().body(ApiResponse.failure(400, "上传文件过大"));
     }
 
     @ExceptionHandler(Exception.class)

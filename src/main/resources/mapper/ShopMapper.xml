@@ -11,6 +11,7 @@
             <if test="closeTime != null">`close_time`,</if>
             <if test="cuisine != null">`cuisine`,</if>
             <if test="avgPrice != null">`avg_price`,</if>
+            <if test="queueHeat != null">`queue_heat`,</if>
             <if test="rating != null">`rating`,</if>
             <if test="ratingCount != null">`rating_count`,</if>
             <if test="coverUrl != null">`cover_url`,</if>
@@ -27,6 +28,7 @@
             <if test="closeTime != null">#{closeTime},</if>
             <if test="cuisine != null">#{cuisine},</if>
             <if test="avgPrice != null">#{avgPrice},</if>
+            <if test="queueHeat != null">#{queueHeat},</if>
             <if test="rating != null">#{rating},</if>
             <if test="ratingCount != null">#{ratingCount},</if>
             <if test="coverUrl != null">#{coverUrl},</if>
@@ -44,6 +46,7 @@
         `close_time`,
         `cuisine`,
         `avg_price`,
+        `queue_heat`,
         `rating`,
         `rating_count`,
         `cover_url`,
@@ -62,6 +65,7 @@
         `close_time` = #{closeTime},
         `cuisine` = #{cuisine},
         `avg_price` = #{avgPrice},
+        `queue_heat` = #{queueHeat},
         `rating` = #{rating},
         `rating_count` = #{ratingCount},
         `cover_url` = #{coverUrl},
@@ -83,6 +87,7 @@
         `close_time`,
         `cuisine`,
         `avg_price`,
+        `queue_heat`,
         `rating`,
         `rating_count`,
         `cover_url`,

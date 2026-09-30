@@ -10,6 +10,8 @@
             <if test="category != null">`category`,</if>
             <if test="mealType != null">`meal_type`,</if>
             <if test="spiceLevel != null">`spice_level`,</if>
+            <if test="takeoutSuitability != null">`takeout_suitability`,</if>
+            <if test="dataSource != null">`data_source`,</if>
             <if test="calorie != null">`calorie`,</if>
             <if test="description != null">`description`,</if>
             <if test="imageUrl != null">`image_url`,</if>
@@ -30,6 +32,8 @@
             <if test="category != null">#{category},</if>
             <if test="mealType != null">#{mealType},</if>
             <if test="spiceLevel != null">#{spiceLevel},</if>
+            <if test="takeoutSuitability != null">#{takeoutSuitability},</if>
+            <if test="dataSource != null">#{dataSource},</if>
             <if test="calorie != null">#{calorie},</if>
             <if test="description != null">#{description},</if>
             <if test="imageUrl != null">#{imageUrl},</if>
@@ -51,6 +55,8 @@
         `category`,
         `meal_type`,
         `spice_level`,
+        `takeout_suitability`,
+        `data_source`,
         `calorie`,
         `description`,
         `image_url`,
@@ -73,6 +79,8 @@
         `category` = #{category},
         `meal_type` = #{mealType},
         `spice_level` = #{spiceLevel},
+        `takeout_suitability` = #{takeoutSuitability},
+        `data_source` = #{dataSource},
         `calorie` = #{calorie},
         `description` = #{description},
         `image_url` = #{imageUrl},
@@ -98,6 +106,8 @@
         `category`,
         `meal_type`,
         `spice_level`,
+        `takeout_suitability`,
+        `data_source`,
         `calorie`,
         `description`,
         `image_url`,
@@ -165,6 +175,8 @@
             <arg column="isSignature" javaType="java.lang.Integer"/>
             <arg column="isAvailable" javaType="java.lang.Integer"/>
             <arg column="rating" javaType="java.math.BigDecimal"/>
+            <arg column="takeoutSuitability" javaType="java.lang.Integer"/>
+            <arg column="dataSource" javaType="java.lang.String"/>
         </constructor>
     </resultMap>
 
@@ -174,7 +186,8 @@
                d.`dish_name` AS `dishName`, d.`price`, d.`category`,
                d.`meal_type` AS `mealType`, d.`spice_level` AS `spiceLevel`,
                d.`calorie`, d.`description`, d.`image_url` AS `imageUrl`,
-               d.`is_signature` AS `isSignature`, d.`is_available` AS `isAvailable`, d.`rating`
+               d.`is_signature` AS `isSignature`, d.`is_available` AS `isAvailable`, d.`rating`,
+               d.`takeout_suitability` AS `takeoutSuitability`, d.`data_source` AS `dataSource`
         FROM `dish` d
         JOIN `shop` s ON s.`id` = d.`shop_id`
         JOIN `canteen` c ON c.`id` = s.`canteen_id`
@@ -193,5 +206,9 @@
 
     <select id="countByShopId" resultType="long">
         SELECT COUNT(*) FROM `dish` WHERE `shop_id` = #{shopId} AND `is_deleted` = 0
+    </select>
+    <select id="findActiveIdByShopAndName" resultType="long">
+        SELECT `id` FROM `dish` WHERE `shop_id` = #{shopId} AND `dish_name` = #{dishName}
+          AND `is_deleted` = 0 LIMIT 1
     </select>
 </mapper>
