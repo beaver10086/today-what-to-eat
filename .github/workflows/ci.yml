@@ -71,9 +71,10 @@ jobs:
       - name: Run 30-user JMeter baseline
         run: |
           mkdir -p tests/jmeter/results
-          docker run --rm --network host -v "$GITHUB_WORKSPACE:/workspace" apache/jmeter:5.6.3 \
-            -n -t /workspace/tests/jmeter/recommendation-load.jmx \
-            -l /workspace/tests/jmeter/results/recommendation.jtl \
+          curl -fL --retry 3 -o /tmp/jmeter.tgz https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
+          tar -xzf /tmp/jmeter.tgz -C /opt
+          /opt/apache-jmeter-5.6.3/bin/jmeter -n -t tests/jmeter/recommendation-load.jmx \
+            -l tests/jmeter/results/recommendation.jtl \
             -JBASE_URL=http://127.0.0.1:8080
           python tests/jmeter/check_results.py tests/jmeter/results/recommendation.jtl
       - name: Upload test and performance reports
