@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
 
 test('菜品列表可用、布局不横向溢出并保存设备截图', async ({ page }, testInfo) => {
-  await page.route('**/api/**', async (route) => {
+  // 只拦截真实后端请求（/api/ 开头），避免误伤 vite dev server 的源码模块（如 /src/api/user.ts）
+  await page.route((url) => url.pathname.startsWith('/api/'), async (route) => {
     const url = new URL(route.request().url())
     let data: unknown = { records: [], total: 0, page: 1, size: 12 }
     if (url.pathname.endsWith('/canteens') || url.pathname.endsWith('/shops') || url.pathname.endsWith('/tags'))
@@ -18,5 +19,5 @@ test('菜品列表可用、布局不横向溢出并保存设备截图', async ({
 
 test('未登录访问收藏页会被引导登录', async ({ page }) => {
   await page.goto('/favorites')
-  await expect(page).toHaveURL(/\/login\?redirect=%2Ffavorites/)
+  await expect(page).toHaveURL(/\/login\?redirect=(?:%2F|\/)favorites/)
 })
