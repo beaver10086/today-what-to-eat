@@ -56,3 +56,6 @@ build/
 
 ### 本地测试临时产物 ###
 tests/jmeter/*-local.jtl
+
+### Office 临时锁文件 ###
+~$*
