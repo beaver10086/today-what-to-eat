@@ -115,15 +115,32 @@ public class AssistantService {
         }
         CanteenView canteen = matchCanteen(text, canteens);
         ShopView shop = matchShop(text, shops);
-        Integer mealType = text.contains("早餐") || text.contains("早饭") ? 1
-                : text.contains("午餐") || text.contains("午饭") ? 2
-                : text.contains("晚餐") || text.contains("晚饭") ? 4
-                : text.contains("夜宵") ? 8 : null;
-        Integer category = text.contains("主食") || text.contains("盖饭") ? 1
-                : text.contains("荤菜") ? 2 : text.contains("素菜") ? 3
-                : text.contains("汤") ? 4 : text.contains("小吃") ? 5
-                : text.contains("饮品") || text.contains("奶茶") ? 6
-                : text.contains("甜点") || text.contains("甜品") ? 7 : null;
+        Integer mealType = null;
+        if (text.contains("早餐") || text.contains("早饭")) {
+            mealType = 1;
+        } else if (text.contains("午餐") || text.contains("午饭")) {
+            mealType = 2;
+        } else if (text.contains("晚餐") || text.contains("晚饭")) {
+            mealType = 4;
+        } else if (text.contains("夜宵")) {
+            mealType = 8;
+        }
+        Integer category = null;
+        if (text.contains("主食") || text.contains("盖饭")) {
+            category = 1;
+        } else if (text.contains("荤菜")) {
+            category = 2;
+        } else if (text.contains("素菜")) {
+            category = 3;
+        } else if (text.contains("汤")) {
+            category = 4;
+        } else if (text.contains("小吃")) {
+            category = 5;
+        } else if (text.contains("饮品") || text.contains("奶茶")) {
+            category = 6;
+        } else if (text.contains("甜点") || text.contains("甜品")) {
+            category = 7;
+        }
         String keyword = extractKeyword(text, canteen, shop);
         boolean nearby = text.contains("附近") || text.contains("离宿舍") || text.contains("离我近")
                 || text.contains("近一点") || text.contains("近的");
