@@ -1,0 +1,57 @@
+﻿用例ID,模块,用例标题,测试方法,前置条件,测试步骤,测试数据,预期结果,实际结果,结论
+TC-AUTH-01,用户认证,合法用户名/密码注册成功,等价类划分-有效等价类,服务正常，数据库可写,POST /api/auth/register 提交合法注册信息,"username=tc_h7iq8jtp, password=TestPass_2026",HTTP 200，返回 token 与用户信息,HTTP 200，success,通过
+TC-AUTH-02,用户认证,用户名 3 位（下边界-1）注册被拒,边界值分析,服务正常,提交 3 位用户名注册,username=aaa,HTTP 400，参数校验不通过,HTTP 400,通过
+TC-AUTH-03,用户认证,用户名 4 位（下边界）注册成功,边界值分析,服务正常,提交 4 位用户名注册,username=aark（4 位）,HTTP 200，注册成功,HTTP 200,通过
+TC-AUTH-04,用户认证,用户名 32 位（上边界）注册成功,边界值分析,服务正常,提交 32 位用户名注册,username=aaaaaaaa...（32 位）,HTTP 200，注册成功,HTTP 200,通过
+TC-AUTH-05,用户认证,用户名 33 位（上边界+1）注册被拒,边界值分析,服务正常,提交 33 位用户名注册,username=a*33,HTTP 400，参数校验不通过,HTTP 400,通过
+TC-AUTH-06,用户认证,用户名含中文（非法字符）注册被拒,等价类划分-无效等价类,服务正常,提交中文用户名注册,username=中文用户名,"HTTP 400，正则 ^[a-zA-Z0-9_]{4,32}$ 校验失败",HTTP 400,通过
+TC-AUTH-07,用户认证,用户名含短横线（非法字符）注册被拒,等价类划分-无效等价类,服务正常,提交含 - 的用户名注册,username=bad-user,HTTP 400，参数校验不通过,HTTP 400,通过
+TC-AUTH-08,用户认证,密码 7 位（下边界-1）注册被拒,边界值分析,服务正常,提交 7 位密码注册,password=7 位,HTTP 400，@Size(min=8) 校验失败,HTTP 400,通过
+TC-AUTH-09,用户认证,密码 8 位（下边界）注册成功,边界值分析,服务正常,提交 8 位密码注册,password=8 位,HTTP 200，注册成功,HTTP 200,通过
+TC-AUTH-10,用户认证,密码 72 字符（上边界）注册成功,边界值分析,服务正常,提交 72 字符密码注册,password=72 字符,HTTP 200，注册成功,HTTP 200,通过
+TC-AUTH-11,用户认证,密码 73 字符（上边界+1）注册被拒,边界值分析,服务正常,提交 73 字符密码注册,password=73 字符,HTTP 400，@Size(max=72) 校验失败,HTTP 400,通过
+TC-AUTH-12,用户认证,含中文密码按 UTF-8 字节数校验（75 字节被拒）,边界值分析-字节边界,服务正常,提交 25 个中文字符的密码（UTF-8 占 75 字节）,password=25 个中文字符（75 字节）,HTTP 400，提示密码 UTF-8 长度不能超过 72 字节,HTTP 400，密码 UTF-8 长度不能超过 72 字节,通过
+TC-AUTH-13,用户认证,重复用户名注册被拒,错误推测法,用户 tc_oqbxk31m 已注册,使用同一用户名再次注册,username=tc_oqbxk31m（重复）,HTTP 409，提示用户名已被使用,HTTP 409，用户名已被使用,通过
+TC-AUTH-14,用户认证,正确用户名密码登录成功,等价类划分-有效等价类,用户 tc_qdapwdun 已注册,POST /api/auth/login 提交正确凭据,"username=tc_qdapwdun, password=TestPass_2026",HTTP 200，返回 12 小时有效 token,HTTP 200，token=已返回,通过
+TC-AUTH-15,用户认证,密码错误登录失败,等价类划分-无效等价类,用户 tc_qdapwdun 已注册,提交正确用户名 + 错误密码,password=WrongPass_2026,HTTP 401，提示用户名或密码错误,HTTP 401，用户名或密码错误,通过
+TC-AUTH-16,用户认证,不存在的用户登录失败,错误推测法,该用户名未注册,提交未注册的用户名登录,username=未注册用户,HTTP 401（不泄露账号是否存在）,HTTP 401,通过
+TC-AUTH-17,用户认证,用户名为空登录被拒,等价类划分-无效等价类,服务正常,提交空用户名登录,username=（空）,HTTP 400，@NotBlank 校验失败,HTTP 400,通过
+TC-AUTH-18,用户认证,登出后 Token 立即失效,场景法,用户已登录且已保存问卷（确保登出前接口可用）,1. 带 token 访问受保护接口；2. 调用登出；3. 再次带同一 token 访问,token=NSB0ep4hcgGyz7uV...,登出前 200，登出后 401,登出前 HTTP 200，登出后 HTTP 401,通过
+TC-PREF-01,口味问卷,未登录读取问卷被拒,错误推测法,未携带 Token,不带 Authorization 头访问 GET /api/preferences/me,无 Token,HTTP 401，鉴权拦截,HTTP 401,通过
+TC-PREF-02,口味问卷,保存合法口味问卷成功,等价类划分-有效等价类,用户已登录,PUT /api/preferences/me 提交问卷,"maxSpiceLevel=2, budget 5~25, dietType=0",HTTP 200，问卷持久化成功,HTTP 200,通过
+TC-PREF-03,口味问卷,辣度 4（上边界+1）被拒,边界值分析,用户已登录,提交 maxSpiceLevel=4 的问卷,maxSpiceLevel=4,HTTP 400，@Max(3) 校验失败,HTTP 400,通过
+TC-PREF-04,口味问卷,辣度取值 0 与 3 边界均通过,边界值分析,用户已登录,分别提交 maxSpiceLevel=0 与 3,maxSpiceLevel=0 / 3,两次均 HTTP 200,0 -> HTTP 200；3 -> HTTP 200,通过
+TC-PREF-05,口味问卷,忌口标签超过 40 个被拒,边界值分析,用户已登录,提交 42 个忌口标签 ID,dislikeTagIds=42 个,HTTP 400，@Size(max=40) 校验失败,HTTP 400,通过
+TC-PREF-06,口味问卷,读取口味画像成功,场景法,用户已登录且已保存问卷,GET /api/preferences/me/profile,无,HTTP 200，返回标签权重画像,HTTP 200,通过
+TC-PREF-07,口味问卷,再次保存问卷保留反馈形成的权重调整,场景法-回归验证,用户已登录，已产生一次「喜欢」反馈,1. 生成推荐并对首道菜点赞；2. 读取画像；3. 再次保存问卷；4. 再次读取画像对比,feedbackType=1（喜欢）,再次保存问卷后，画像权重不被清零,保存前/后画像一致: True,通过
+TC-DISH-01,菜品目录,菜品列表默认分页 size=20,等价类划分-有效等价类,数据库存在 100 道菜品,GET /api/dishes 不带分页参数,page/size 缺省,HTTP 200，返回第 1 页且条数不超过 20,HTTP 200，返回 20 条，total=100,通过
+TC-DISH-02,菜品目录,分页 size=101 超上限被拒,边界值分析,服务正常,GET /api/dishes?size=101,size=101,HTTP 400，@Max(100) 校验失败,HTTP 400,通过
+TC-DISH-03,菜品目录,多条件组合筛选结果全部满足条件,场景法,数据库存在符合筛选条件的菜品,按食堂+分类+辣度+价格区间+餐段组合查询,"canteenId=900001, category=1, spiceLevel=0, price 5~20, mealType=2",HTTP 200，返回菜品全部落在筛选条件内,HTTP 200，返回 1 条，全部满足价格区间: True,通过
+TC-DISH-04,菜品目录,按食堂与预算随机抽取在售菜品,场景法,数据库存在在售菜品,GET /api/dishes/random?canteenId=900001&maxPrice=20,"canteenId=900001, maxPrice=20",HTTP 200，返回 1 道在售且价格 ≤20 的菜品,HTTP 200，菜品=糖醋里脊饭，价格=12.75,通过
+TC-DISH-05,菜品目录,菜品详情返回打包适配度与数据来源字段,回归验证,数据库已应用 V1.0.0/V1.0.3 含 takeout_suitability、data_source 列，且 920001 已置为 2 / 实地核对,GET /api/dishes/920001 并检查返回字段,dishId=920001,HTTP 200，响应体返回 takeoutSuitability=2、dataSource=实地核对（不报 Unknown column）,HTTP 200，takeoutSuitability=2，dataSource=实地核对，message=success,通过
+TC-DISH-06,菜品目录,查询不存在的菜品 ID 返回 404,错误推测法,服务正常,GET /api/dishes/99999999,id=99999999,HTTP 404，提示菜品不存在,HTTP 404,通过
+TC-DISH-07,菜品目录,价格区间 minPrice > maxPrice 被拒,错误推测法,服务正常,GET /api/dishes?minPrice=50&maxPrice=10,"minPrice=50, maxPrice=10",HTTP 400，参数不合法,HTTP 400,通过
+TC-SHOP-01,档口食堂,档口详情返回排队热度字段,回归验证,数据库已应用含 queue_heat 列的脚本，且 910001 已置为 2（较长）,GET /api/shops/910001,shopId=910001,HTTP 200，响应体返回 queueHeat=2（不报 Unknown column）,HTTP 200，queueHeat=2，message=success,通过
+TC-SHOP-02,档口食堂,仍有关联菜品时删除档口被拒,错误推测法,档口 910001 下存在菜品,以管理员身份 DELETE /api/shops/910001,shopId=910001,HTTP 400/403，提示存在子数据无法删除,HTTP 403，仅管理员可维护数据,通过
+TC-REC-01,个性化推荐,未登录请求推荐被拒,错误推测法,未携带 Token,不带 Token POST /api/recommendations,mealType=2,HTTP 401，鉴权拦截,HTTP 401,通过
+TC-REC-02,个性化推荐,未完成问卷直接推荐被拒,场景法-异常分支,用户已登录但未保存问卷,POST /api/recommendations,mealType=2,HTTP 400，提示请先完成口味问卷,HTTP 400，请先完成口味问卷，再使用个性化推荐,通过
+TC-REC-03,个性化推荐,完成问卷后生成推荐成功,场景法-正常分支,用户已登录且已保存问卷,1. 保存问卷；2. POST /api/recommendations,"mealType=2, limit=3",HTTP 200，返回不超过 3 道菜及推荐理由,HTTP 200，返回 3 道菜,通过
+TC-REC-04,个性化推荐,mealType=5 越界被拒,边界值分析,用户已登录且已保存问卷,提交 mealType=5,mealType=5,HTTP 400，@Max(4) 校验失败,HTTP 400,通过
+TC-REC-05,个性化推荐,换一组结果不重复上一组菜品,场景法,用户已生成一组推荐,1. 生成推荐记录首组菜品；2. 调用 next 换一组；3. 比对两组菜品交集,feedbackType=3（换一组）,HTTP 200，两组菜品无交集,HTTP 200，首组 3 道，次组 3 道，交集 0 道,通过
+TC-REC-06,个性化推荐,反馈不属于本次推荐的菜品被拒,错误推测法,用户已生成一组推荐,对不在推荐列表中的菜品 ID 提交反馈,dishId=99999999,HTTP 400，提示该菜品不属于本次推荐,HTTP 400，该菜品不属于本次推荐,通过
+TC-REC-07,个性化推荐,feedbackType=3 走 feedback 接口被拒,等价类划分-无效等价类,用户已生成一组推荐,以 feedbackType=3 调用 feedback 接口,feedbackType=3,HTTP 400，提示换一组请使用 next 接口,HTTP 400，换一组请使用 next 接口,通过
+TC-REC-08,个性化推荐,跨用户访问他人推荐记录被拒,安全性测试,用户 A 生成推荐记录 170，用户 B 已登录,以用户 B 的 Token 操作用户 A 的推荐记录,recommendationId=170（他人）,HTTP 404，提示推荐记录不存在（不泄露资源存在性）,HTTP 404，推荐记录不存在,通过
+TC-REC-09,个性化推荐,无符合条件菜品时给出明确提示,场景法-异常分支,用户预算设置为 0.01~0.02 元（无菜品满足）,保存极端预算问卷后请求推荐,"budgetMin=0.01, budgetMax=0.02",HTTP 404，提示没有符合条件的菜品,HTTP 404，没有符合条件的菜品，请调整预算或口味问卷,通过
+TC-FAV-01,收藏,未登录添加收藏被拒,错误推测法,未携带 Token,不带 Token POST /api/favorites,"targetType=1, targetId=920001",HTTP 401，鉴权拦截,HTTP 401,通过
+TC-FAV-02,收藏,登录用户添加菜品收藏成功,场景法-正常分支,用户已登录,POST /api/favorites 收藏菜品 920001,"targetType=1（菜品）, targetId=920001",HTTP 200，收藏记录写入,HTTP 200,通过
+TC-FAV-03,收藏,重复收藏同一菜品保持幂等,错误推测法,已收藏菜品 920001,再次提交相同收藏请求后查询收藏 ID 列表,targetId=920001（重复提交 2 次）,收藏 ID 列表中 920001 只出现一次,HTTP 200，收藏列表=[920001],通过
+TC-FAV-04,收藏,移除收藏后不再出现在收藏列表,场景法,已收藏菜品 920001,1. DELETE /api/favorites/1/920001；2. 查询收藏列表,"targetType=1, targetId=920001",HTTP 200，收藏列表中不含 920001（逻辑删除）,HTTP 200，删除后列表=[],通过
+TC-FAV-05,收藏,取消后可再次收藏（逻辑删除可逆）,场景法,菜品 920001 已被取消收藏,重新提交收藏请求后查询收藏列表,targetId=920001（再次收藏）,HTTP 200，收藏列表重新包含 920001,HTTP 200，列表=[920001],通过
+TC-ASST-01,智能助手,自然语言解析预算/辣度/餐段条件,场景法,菜品库已有数据，AI 未配置时走规则解析,POST /api/assistant/search 提交自然语言查询,message=来个不辣的午餐，15 元以内,HTTP 200，返回按解析条件筛选出的菜品,HTTP 200，返回 0 条,通过
+TC-ASST-02,智能助手,空输入不导致 500 或空指针,错误推测法-缺陷回归,服务正常,POST /api/assistant/search 提交空字符串,message=（空）,HTTP 400，参数校验拦截，不出现 500,HTTP 400,通过
+TC-ASST-03,智能助手,超长输入（501 字）被拒,边界值分析,服务正常,提交 501 个字符的查询文本,message=501 字符,HTTP 400，@Size(max=500) 校验失败,HTTP 400,通过
+TC-ASST-04,智能助手,「附近」意图给出无法按距离排序的明确提示,场景法-异常分支,表结构不含宿舍与食堂坐标,POST /api/assistant/ask 询问附近美食,message=附近有什么好吃的,HTTP 200，返回文字答案并提示无法按实际步行距离排序,HTTP 200,通过
+TC-SEC-01,安全权限,无 Token 写入菜品被拒,安全性测试,未携带 Token,不带 Token POST /api/dishes,新菜品数据,HTTP 401，鉴权拦截,HTTP 401,通过
+TC-SEC-02,安全权限,普通用户写入菜品被拒,安全性测试,登录账号为普通用户（role=1）,以普通用户 Token POST /api/dishes,新菜品数据,HTTP 403，权限不足,HTTP 403，仅管理员可维护数据,通过
+TC-SEC-03,安全权限,注册请求中指定 role=2 不生效,安全性测试-越权测试,注册接口不接受角色字段,注册时额外提交 role=2（管理员）后登录查看角色,role=2（尝试越权提权）,注册成功但角色仍为 1（普通用户）,HTTP 200，登录后 role=1,通过
+TC-SEC-04,安全权限,伪造/失效 Token 访问被拒,安全性测试,服务正常,携带无效 Token 访问受保护接口,token=invalid.token.value,HTTP 401，鉴权拦截,HTTP 401,通过

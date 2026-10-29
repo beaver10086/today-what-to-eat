@@ -68,6 +68,21 @@ mvn verify
 
 `mvn verify` 执行后端单元/Mapper 测试、Checkstyle 和 JaCoCo 覆盖率门禁（服务包 70%，推荐服务 60%）。前端执行 `npm run lint`、`npm run build` 和 `npm run test:e2e`；Playwright 在桌面 Chromium、iPhone WebKit 和 Pixel Chromium 配置下运行响应式冒烟并保存截图。Newman API 回归位于 `tests/newman`，30 并发 JMeter 基准位于 `tests/jmeter`。完整运行方式、性能阈值、SonarQube 设置和测试环境启动步骤见 [阶段 6 质量与部署说明](docs/phase-6-test-plan.md) 与 [测试环境部署](docs/deployment-test.md)。
 
+### 黑盒功能测试用例集
+
+`tests/functional` 提供覆盖 8 个模块的 56 条黑盒功能测试用例，使用等价类划分、边界值分析、场景法和错误推测法设计，可对运行中的服务自动执行并判定通过/失败：
+
+```bash
+# 先按「本地启动」建库并执行 docs/sql 下的脚本，再执行夹具准备验证数据：
+mysql -u root -p what_to_eat < tests/functional/fixture.sql
+
+# 后端运行后执行用例（默认 http://127.0.0.1:8080）
+python tests/functional/run_functional_cases.py
+python tests/functional/run_functional_cases.py http://127.0.0.1:8080
+```
+
+结果输出到 `tests/functional/results/` 下的 CSV 与 JSON 文件。实验报告可由 `python scripts/generate_test_report.py` 生成。
+
 ### 前端
 
 需要 Node.js 20+、npm。进入 `frontend` 目录运行：

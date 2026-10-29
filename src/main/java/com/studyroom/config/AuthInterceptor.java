@@ -28,7 +28,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
         String path = request.getRequestURI();
-        boolean userRoute = path.startsWith("/api/preferences") || path.startsWith("/api/profile")
+        boolean userRoute = path.startsWith("/api/preferences")
                 || path.startsWith("/api/recommendations") || path.startsWith("/api/favorites");
         boolean managementWrite = isWrite(request.getMethod())
                 && (path.startsWith("/api/canteens") || path.startsWith("/api/shops")
